@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>CSC Franchise Sticker Generator</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                min-height: 100vh;
+                background-color: #111827;
+                color: white;
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .container {
+                padding: 2rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            h1 {
+                font-size: 1.875rem;
+                font-weight: bold;
+                margin-bottom: 1rem;
+            }
+
+            .controls {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            select,
+            button {
+                background-color: #1f2937;
+                color: white;
+                border: 1px solid #374151;
+                border-radius: 0.375rem;
+                padding: 0.5rem 1rem;
+                font-size: 0.875rem;
+            }
+
+            select {
+                width: 200px;
+            }
+
+            button {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+
+            button:hover {
+                background-color: #374151;
+            }
+
+            .brush-control {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            input[type="range"] {
+                width: 100px;
+                background-color: #1f2937;
+            }
+
+            .canvas-container {
+                position: relative;
+                width: 512px;
+                height: 512px;
+                border: 2px solid #374151;
+                border-radius: 0.5rem;
+            }
+
+            canvas {
+                position: absolute;
+                top: 0;
+                left: 0;
+                cursor: crosshair;
+            }
+
+            #backgroundCanvas {
+                z-index: 1;
+                background-color: #1f2937;
+            }
+
+            #drawingCanvas {
+                z-index: 2;
+                background: transparent;
+            }
+
+            .size-display {
+                min-width: 2rem;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>CSC Franchise Sticker Generator</h1>
+
+            <div class="controls">
+                <select id="backgroundSelect">
+                    <option value="ABW">ABW</option>
+                    <option value="ACA">ACA</option>
+                    <option value="AG">AG</option>
+                    <option value="ATL">ATL</option>
+                    <option value="AVI">AVI</option>
+                    <option value="BS">BS</option>
+                    <option value="COW">COW</option>
+                    <option value="CSC">CSC</option>
+                    <option value="DB">dB</option>
+                    <option value="DRG">DRG</option>
+                    <option value="FRG">FRG</option>
+                    <option value="GAS">GAS</option>
+                    <option value="GRN">GRN</option>
+                    <option value="H4K">H4K</option>
+                    <option value="HG">HG</option>
+                    <option value="HR">HR</option>
+                    <option value="NAN">NAN</option>
+                    <option value="OS">OS</option>
+                    <option value="PA">PA</option>
+                    <option value="SAV">SAV</option>
+                    <option value="TSC">TSC</option>
+                    <option value="UPS">UPS</option>
+                    <option value="WET">WET</option>
+                </select>
+
+                <div class="brush-control">
+                    <span>Brush Size:</span>
+                    <input
+                        type="range"
+                        id="brushSize"
+                        min="5"
+                        max="15"
+                        value="5"
+                    />
+                    <span id="sizeDisplay" class="size-display">5</span>
+                </div>
+
+                <button id="clearButton">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path
+                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                        ></path>
+                    </svg>
+                    Clear
+                </button>
+
+                <button id="saveButton">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    >
+                        <path
+                            d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"
+                        ></path>
+                    </svg>
+                    Save
+                </button>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="backgroundCanvas" width="512" height="512"></canvas>
+                <canvas id="drawingCanvas" width="512" height="512"></canvas>
+            </div>
+            <p align="center">
+                made with love by chobits, 2025<br />sticker designs by spideY
+                and chobits
+            </p>
+        </div>
+
+        <script>
+            const backgroundCanvas =
+                document.getElementById("backgroundCanvas");
+            const drawingCanvas = document.getElementById("drawingCanvas");
+            const bgCtx = backgroundCanvas.getContext("2d");
+            const ctx = drawingCanvas.getContext("2d");
+            const backgroundSelect =
+                document.getElementById("backgroundSelect");
+            const brushSizeInput = document.getElementById("brushSize");
+            const sizeDisplay = document.getElementById("sizeDisplay");
+            const saveButton = document.getElementById("saveButton");
+            const clearButton = document.getElementById("clearButton");
+
+            let isDrawing = false;
+            let brushSize = 5;
+            let currentBackground = "1";
+
+            // Background image URLs - Replace these with your actual image URLs
+            const backgrounds = {
+                ABW: "teams/ABW/ProfilePicture.png",
+                ACA: "teams/ACA/ProfilePicture.png",
+                AG: "teams/AG/ProfilePicture.png",
+                ATL: "teams/ATL/ProfilePicture.png",
+                AVI: "teams/AVI/ProfilePicture.png",
+                BS: "teams/BS/ProfilePicture.png",
+                COW: "teams/COW/ProfilePicture.png",
+                CSC: "teams/CSC/ProfilePicture.png",
+                DB: "teams/dB/ProfilePicture.png",
+                DRG: "teams/DRG/ProfilePicture.png",
+                FRG: "teams/FRG/ProfilePicture.png",
+                GAS: "teams/GAS/ProfilePicture.png",
+                GRN: "teams/GRN/ProfilePicture.png",
+                H4K: "teams/H4K/ProfilePicture.png",
+                HG: "teams/HG/ProfilePicture.png",
+                HR: "teams/HR/ProfilePicture.png",
+                NAN: "teams/NAN/ProfilePicture.png",
+                OS: "teams/OS/ProfilePicture.png",
+                PA: "teams/PA/ProfilePicture.png",
+                SAV: "teams/SAV/ProfilePicture.png",
+                TSC: "teams/TSC/ProfilePicture.png",
+                UPS: "teams/UPS/ProfilePicture.png",
+                WET: "teams/WET/ProfilePicture.png",
+            };
+
+            // Initialize canvases
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+
+            function drawBackground(bgNumber) {
+                currentBackground = bgNumber;
+                const img = new Image();
+                img.crossOrigin = "anonymous"; // Add CORS support
+                img.onerror = () => {
+                    console.warn(
+                        "Could not load image with CORS, falling back to normal mode",
+                    );
+                    img.crossOrigin = null; // Fall back to normal mode if CORS fails
+                    img.src = backgrounds[bgNumber];
+                };
+                img.onload = () => {
+                    bgCtx.drawImage(img, 0, 0, 512, 512);
+                };
+                img.src = backgrounds[bgNumber];
+            }
+
+            function clearCanvas() {
+                ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            }
+
+            function startDrawing(e) {
+                isDrawing = true;
+                const rect = drawingCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+            }
+
+            function draw(e) {
+                if (!isDrawing) return;
+
+                const rect = drawingCanvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                // Draw black border
+                ctx.lineTo(x, y);
+                ctx.strokeStyle = "#000000";
+                ctx.lineWidth = brushSize * 2;
+                ctx.stroke();
+
+                // Draw white center
+                ctx.lineTo(x, y);
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = brushSize;
+                ctx.stroke();
+            }
+
+            function stopDrawing() {
+                isDrawing = false;
+                ctx.closePath();
+            }
+
+            // Event listeners
+            drawingCanvas.addEventListener("mousedown", startDrawing);
+            drawingCanvas.addEventListener("mousemove", draw);
+            drawingCanvas.addEventListener("mouseup", stopDrawing);
+            drawingCanvas.addEventListener("mouseout", stopDrawing);
+
+            backgroundSelect.addEventListener("change", (e) => {
+                drawBackground(e.target.value);
+            });
+
+            brushSizeInput.addEventListener("input", (e) => {
+                brushSize = parseInt(e.target.value);
+                sizeDisplay.textContent = brushSize;
+            });
+
+            clearButton.addEventListener("click", clearCanvas);
+
+            saveButton.addEventListener("click", () => {
+                // Create a temporary canvas to merge background and drawing
+                const tempCanvas = document.createElement("canvas");
+                tempCanvas.width = 512;
+                tempCanvas.height = 512;
+                const tempCtx = tempCanvas.getContext("2d");
+
+                // First, fill with the base background color
+                tempCtx.fillStyle = "#1f2937";
+                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+                // Then draw the current state of both canvases
+                tempCtx.drawImage(backgroundCanvas, 0, 0);
+                tempCtx.drawImage(drawingCanvas, 0, 0);
+
+                try {
+                    // Create and trigger download
+                    const link = document.createElement("a");
+                    link.download = `drawing-${Date.now()}.png`;
+                    link.href = tempCanvas.toDataURL("image/png");
+                    link.click();
+                } catch (error) {
+                    console.error("Failed to save:", error);
+                    alert("Failed to save the image. Please try again.");
+                }
+            });
+
+            // Initialize with first background
+            drawBackground("1");
+        </script>
+    </body>
+</html>
