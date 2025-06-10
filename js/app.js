@@ -2,7 +2,6 @@ import { TEAMS, ASSET_TYPES, DEFAULT_STATE, DRAWING_CONFIG } from './config.js';
 import { CanvasManager } from './modules/canvas.js';
 import { SignatureManager } from './modules/signature.js';
 import { TransformController } from './modules/transform.js';
-import { StorageManager } from './modules/storage.js';
 import { Utils } from './modules/utils.js';
 
 class SignatureOverlayApp {
@@ -11,7 +10,13 @@ class SignatureOverlayApp {
     this.initializeModules();
     this.setupUI();
     this.setupEventListeners();
-    this.loadLastProject();
+    this.loadSavedState();
+    
+    // Performance optimization: debounced render
+    this.debouncedRender = Utils.debounce(() => this.render(), 16); // 60fps
+    
+    // Auto-save state changes
+    this.debouncedSaveState = Utils.debounce(() => this.saveState(), 500);
   }
 
   initializeModules() {
@@ -28,9 +33,6 @@ class SignatureOverlayApp {
     this.transform = new TransformController(
       (newTransform) => this.updateTransform(newTransform)
     );
-    
-    // Initialize storage
-    this.storage = new StorageManager();
   }
 
   setupUI() {
@@ -116,14 +118,12 @@ class SignatureOverlayApp {
       () => this.resetTransform());
     document.getElementById('deleteSignature').addEventListener('click', 
       () => this.deleteSignature());
+    document.getElementById('doneTransform').addEventListener('click', 
+      () => this.finishEditingSignature());
     
-    // Export/Save
+    // Export
     document.getElementById('exportBtn').addEventListener('click', 
       () => this.exportImage());
-    document.getElementById('saveProject').addEventListener('click', 
-      () => this.saveProject());
-    document.getElementById('loadProject').addEventListener('click', 
-      () => this.showLoadDialog());
     
     // Canvas mouse events
     this.setupCanvasEvents();
@@ -182,8 +182,10 @@ class SignatureOverlayApp {
       this.state.teamPrefix = null;
       this.state.teamName = null;
       this.state.asset = null;
+      this.state.backgroundImage = null;
       document.getElementById('assetSelect').disabled = true;
       document.getElementById('assetSelect').value = '';
+      document.getElementById('exportBtn').disabled = true;
       this.canvas.clear();
       return;
     }
@@ -227,7 +229,9 @@ class SignatureOverlayApp {
       
       // Enable export
       document.getElementById('exportBtn').disabled = false;
-      document.getElementById('saveProject').disabled = false;
+      
+      // Auto-save state
+      this.debouncedSaveState();
       
       Utils.showToast('Background loaded successfully', 'success');
     } catch (error) {
@@ -244,6 +248,10 @@ class SignatureOverlayApp {
     document.getElementById('drawingTools').classList.add('active');
     document.getElementById('uploadWrapper').classList.add('hidden');
     
+    // Add visual indicator to canvas wrapper
+    document.getElementById('canvasWrapper').classList.add('drawing-mode');
+    document.getElementById('drawingModeTooltip').classList.remove('hidden');
+    
     this.signature.startDrawing(brushSize, brushColor);
   }
 
@@ -256,21 +264,61 @@ class SignatureOverlayApp {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      Utils.showToast('File too large. Maximum size is 5MB', 'error');
-      return;
-    }
-    
-    // Check file type
-    if (!file.type.startsWith('image/')) {
-      Utils.showToast('Please select an image file', 'error');
+    // Enhanced security validation
+    if (!this.validateImageFile(file)) {
+      e.target.value = ''; // Reset file input
       return;
     }
     
     this.signature.handleFileUpload(file);
     document.getElementById('uploadWrapper').classList.add('hidden');
     e.target.value = ''; // Reset file input
+  }
+
+  validateImageFile(file) {
+    // Check file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      Utils.showToast('File too large. Maximum size is 5MB', 'error');
+      return false;
+    }
+
+    // Minimum file size check (prevent empty files)
+    if (file.size < 100) {
+      Utils.showToast('File too small. Please select a valid image', 'error');
+      return false;
+    }
+
+    // Strict MIME type validation
+    const allowedTypes = [
+      'image/jpeg',
+      'image/jpg', 
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/bmp'
+    ];
+    
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      Utils.showToast('Invalid file type. Please select a valid image file (JPEG, PNG, GIF, WebP, BMP)', 'error');
+      return false;
+    }
+
+    // File name validation (prevent path traversal)
+    const fileName = file.name;
+    if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) {
+      Utils.showToast('Invalid file name', 'error');
+      return false;
+    }
+
+    // File extension validation
+    const validExtensions = /\.(jpg|jpeg|png|gif|webp|bmp)$/i;
+    if (!validExtensions.test(fileName)) {
+      Utils.showToast('Invalid file extension', 'error');
+      return false;
+    }
+
+    return true;
   }
 
   async handleSignatureReady(signatureData, type) {
@@ -293,6 +341,11 @@ class SignatureOverlayApp {
       document.getElementById('transformSection').classList.remove('hidden');
       document.getElementById('signatureBox').classList.add('active');
       
+      // Enable export button if we have both background and signature
+      if (this.state.backgroundImage) {
+        document.getElementById('exportBtn').disabled = false;
+      }
+      
       this.updateSignatureBox();
       this.render();
       
@@ -308,26 +361,30 @@ class SignatureOverlayApp {
     this.state.transform = newTransform;
     this.updateSignatureBox();
     this.render();
+    this.debouncedSaveState();
   }
 
   updateScale(value) {
-    this.state.transform.scale = value / 100;
-    document.getElementById('scaleValue').textContent = value + '%';
+    const safeValue = this.validateNumericInput(value, 10, 200, 100);
+    this.state.transform.scale = safeValue / 100;
+    document.getElementById('scaleValue').textContent = safeValue + '%';
     this.updateSignatureBox();
-    this.render();
+    this.debouncedRender();
   }
 
   updateRotation(value) {
-    this.state.transform.rotation = parseInt(value);
-    document.getElementById('rotationValue').textContent = value + '°';
+    const safeValue = this.validateNumericInput(value, -180, 180, 0);
+    this.state.transform.rotation = safeValue;
+    document.getElementById('rotationValue').textContent = safeValue + '°';
     this.updateSignatureBox();
-    this.render();
+    this.debouncedRender();
   }
 
   updateOpacity(value) {
-    this.state.transform.opacity = value / 100;
-    document.getElementById('opacityValue').textContent = value + '%';
-    this.render();
+    const safeValue = this.validateNumericInput(value, 0, 100, 100);
+    this.state.transform.opacity = safeValue / 100;
+    document.getElementById('opacityValue').textContent = safeValue + '%';
+    this.debouncedRender();
   }
 
   updateBrushSize(value) {
@@ -345,33 +402,45 @@ class SignatureOverlayApp {
 
   // Background control methods
   updateBackgroundType(type) {
-    this.state.backgroundSettings.type = type;
+    const validTypes = ['original', 'solid', 'gradient', 'transparent'];
+    const safeType = validTypes.includes(type) ? type : 'original';
+    this.state.backgroundSettings.type = safeType;
     
     // Show/hide relevant controls
-    document.getElementById('solidColorGroup').classList.toggle('hidden', type !== 'solid');
-    document.getElementById('gradientGroup').classList.toggle('hidden', type !== 'gradient');
+    document.getElementById('solidColorGroup').classList.toggle('hidden', safeType !== 'solid');
+    document.getElementById('gradientGroup').classList.toggle('hidden', safeType !== 'gradient');
     
-    this.render();
+    this.debouncedRender();
+    this.debouncedSaveState();
   }
 
   updateBackgroundColor(color) {
-    this.state.backgroundSettings.solidColor = color;
-    this.render();
+    const safeColor = this.validateColorInput(color);
+    this.state.backgroundSettings.solidColor = safeColor;
+    this.debouncedRender();
+    this.debouncedSaveState();
   }
 
   updateGradientColor1(color) {
-    this.state.backgroundSettings.gradientColor1 = color;
-    this.render();
+    const safeColor = this.validateColorInput(color);
+    this.state.backgroundSettings.gradientColor1 = safeColor;
+    this.debouncedRender();
+    this.debouncedSaveState();
   }
 
   updateGradientColor2(color) {
-    this.state.backgroundSettings.gradientColor2 = color;
-    this.render();
+    const safeColor = this.validateColorInput(color);
+    this.state.backgroundSettings.gradientColor2 = safeColor;
+    this.debouncedRender();
+    this.debouncedSaveState();
   }
 
   updateGradientDirection(direction) {
-    this.state.backgroundSettings.gradientDirection = direction;
-    this.render();
+    const validDirections = ['to-bottom', 'to-right', 'to-bottom-right', 'to-bottom-left'];
+    const safeDirection = validDirections.includes(direction) ? direction : 'to-bottom';
+    this.state.backgroundSettings.gradientDirection = safeDirection;
+    this.debouncedRender();
+    this.debouncedSaveState();
   }
 
   resetTransform() {
@@ -389,6 +458,18 @@ class SignatureOverlayApp {
     this.render();
   }
 
+  finishEditingSignature() {
+    // Hide the signature box outline
+    document.getElementById('signatureBox').classList.remove('active');
+    
+    // Enable export button if we have both background and signature
+    if (this.state.backgroundImage && this.state.signature) {
+      document.getElementById('exportBtn').disabled = false;
+    }
+    
+    Utils.showToast('Signature locked in place', 'success');
+  }
+
   deleteSignature() {
     if (!confirm('Delete the current signature?')) return;
     
@@ -397,6 +478,12 @@ class SignatureOverlayApp {
     
     document.getElementById('transformSection').classList.add('hidden');
     document.getElementById('signatureBox').classList.remove('active');
+    
+    // Keep export buttons enabled if we still have a background
+    // (user can export background without signature)
+    if (!this.state.backgroundImage) {
+      document.getElementById('exportBtn').disabled = true;
+    }
     
     this.render();
     Utils.showToast('Signature deleted', 'info');
@@ -448,12 +535,6 @@ class SignatureOverlayApp {
       this.deleteSignature();
     }
     
-    // Ctrl/Cmd + S - save project
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-      e.preventDefault();
-      this.saveProject();
-    }
-    
     // Ctrl/Cmd + E - export image
     if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
       e.preventDefault();
@@ -482,85 +563,135 @@ class SignatureOverlayApp {
     Utils.showToast('Image exported successfully', 'success');
   }
 
-  saveProject() {
-    const projectData = {
-      state: this.state,
-      signature: this.state.signature ? this.state.signature.src : null
-    };
-    
-    const projectId = this.storage.saveProject(projectData);
-    Utils.showToast('Project saved successfully', 'success');
-  }
 
-  showLoadDialog() {
-    // Create and show project list dialog
-    const projects = this.storage.getProjects();
-    
-    if (projects.length === 0) {
-      Utils.showToast('No saved projects found', 'info');
-      return;
-    }
-    
-    // For now, just load the most recent
-    const project = projects[0];
-    this.loadProject(project);
-  }
-
-  async loadProject(project) {
+  // Auto-save functionality
+  saveState() {
     try {
-      // Restore state
-      this.state = { ...project.state };
+      // Create a serializable version of the state
+      const stateToSave = {
+        teamPrefix: this.state.teamPrefix,
+        teamName: this.state.teamName,
+        asset: this.state.asset,
+        transform: this.state.transform,
+        backgroundSettings: this.state.backgroundSettings
+      };
       
-      // Update UI
-      document.getElementById('teamSelect').value = this.state.teamPrefix || '';
-      document.getElementById('assetSelect').value = this.state.asset || '';
-      document.getElementById('assetSelect').disabled = !this.state.teamPrefix;
-      
-      // Load background
-      if (this.state.teamPrefix && this.state.asset) {
-        await this.handleAssetChange(this.state.asset);
-      }
-      
-      // Load signature
-      if (project.signature) {
-        const img = await Utils.loadImage(project.signature);
-        this.state.signature = img;
-        
-        // Show transform controls
-        document.getElementById('transformSection').classList.remove('hidden');
-        document.getElementById('signatureBox').classList.add('active');
-        
-        // Update transform UI
-        document.getElementById('scaleSlider').value = this.state.transform.scale * 100;
-        document.getElementById('scaleValue').textContent = 
-          (this.state.transform.scale * 100) + '%';
-        document.getElementById('rotationSlider').value = this.state.transform.rotation;
-        document.getElementById('rotationValue').textContent = 
-          this.state.transform.rotation + '°';
-        document.getElementById('opacitySlider').value = this.state.transform.opacity * 100;
-        document.getElementById('opacityValue').textContent = 
-          (this.state.transform.opacity * 100) + '%';
-        
-        this.updateSignatureBox();
-      }
-      
-      this.render();
-      Utils.showToast('Project loaded successfully', 'success');
+      localStorage.setItem('csc_sticker_state', JSON.stringify(stateToSave));
     } catch (error) {
-      Utils.showToast('Failed to load project', 'error');
-      console.error(error);
+      console.error('Failed to save state:', error);
     }
   }
 
-  loadLastProject() {
-    const lastProject = this.storage.loadCurrentProject();
-    if (lastProject) {
-      this.loadProject(lastProject);
+  loadSavedState() {
+    try {
+      const savedState = localStorage.getItem('csc_sticker_state');
+      if (savedState) {
+        const parsedState = JSON.parse(savedState);
+        
+        // Merge saved state with defaults
+        this.state = { ...DEFAULT_STATE, ...parsedState };
+        
+        // Update UI to reflect loaded state
+        if (this.state.teamPrefix) {
+          document.getElementById('teamSelect').value = this.state.teamPrefix;
+          this.handleTeamChange(this.state.teamPrefix);
+          
+          if (this.state.asset) {
+            document.getElementById('assetSelect').value = this.state.asset;
+            // Load the asset in the background
+            setTimeout(() => this.handleAssetChange(this.state.asset), 100);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load saved state:', error);
+      // Continue with default state
     }
+  }
+
+  // Input validation methods
+  validateNumericInput(value, min, max, defaultValue) {
+    const num = parseFloat(value);
+    if (isNaN(num)) return defaultValue;
+    return Math.max(min, Math.min(max, num));
+  }
+
+  validateStringInput(value, maxLength = 100) {
+    if (typeof value !== 'string') return '';
+    return value.substring(0, maxLength).replace(/[<>\"'&]/g, '');
+  }
+
+  validateTeamPrefix(prefix) {
+    const validPrefixes = TEAMS.map(team => team.prefix);
+    return validPrefixes.includes(prefix) ? prefix : null;
+  }
+
+  validateAssetType(asset) {
+    return Object.keys(ASSET_TYPES).includes(asset) ? asset : null;
+  }
+
+  validateColorInput(color) {
+    // Validate hex color format
+    const hexPattern = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+    if (typeof color === 'string' && hexPattern.test(color)) {
+      return color;
+    }
+    return '#ffffff'; // Default to white
+  }
+
+  // Performance monitoring
+  performanceMonitor() {
+    if (typeof performance !== 'undefined' && performance.memory) {
+      const memory = performance.memory;
+      if (memory.usedJSHeapSize > 50 * 1024 * 1024) { // 50MB
+        console.warn('High memory usage detected');
+      }
+    }
+  }
+
+  // Cleanup method for memory management
+  cleanup() {
+    // Clear any timeouts or intervals
+    if (this.performanceInterval) {
+      clearInterval(this.performanceInterval);
+    }
+    
+    // Clear canvas contexts
+    if (this.canvas) {
+      this.canvas.clear();
+      this.canvas.clearDrawing();
+    }
+    
+    // Clear stored state
+    this.state = { ...DEFAULT_STATE };
   }
 }
 
-// Initialize app when DOM is ready
+// Initialize app when DOM is ready with error handling
 document.addEventListener('DOMContentLoaded', () => {
-  window.app = new SignatureOverlayApp();
+  try {
+    window.app = new SignatureOverlayApp();
+    
+    // Set up performance monitoring
+    if (typeof performance !== 'undefined') {
+      window.app.performanceInterval = setInterval(() => {
+        window.app.performanceMonitor();
+      }, 30000); // Check every 30 seconds
+    }
+    
+    // Set up error handling
+    window.addEventListener('error', (event) => {
+      console.error('Application error:', event.error);
+      Utils.showToast('An error occurred. Please refresh the page.', 'error');
+    });
+    
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      Utils.showToast('An error occurred. Please try again.', 'error');
+    });
+    
+  } catch (error) {
+    console.error('Failed to initialize application:', error);
+    document.body.innerHTML = '<div style="padding: 2rem; text-align: center; color: red;">Failed to load application. Please refresh the page.</div>';
+  }
 });

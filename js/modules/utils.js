@@ -21,14 +21,75 @@ export const Utils = {
     };
   },
 
-  // Load image with promise
+  // Load image with promise and security validation
   loadImage(src) {
     return new Promise((resolve, reject) => {
+      // Validate image source
+      if (!this.validateImageSrc(src)) {
+        reject(new Error('Invalid image source'));
+        return;
+      }
+
       const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
-      img.src = src;
+      
+      // Set up timeout for loading
+      const timeout = setTimeout(() => {
+        reject(new Error('Image load timeout'));
+      }, 10000); // 10 second timeout
+      
+      img.onload = () => {
+        clearTimeout(timeout);
+        
+        // Validate image dimensions
+        if (img.width > 4096 || img.height > 4096) {
+          reject(new Error('Image too large'));
+          return;
+        }
+        
+        if (img.width < 1 || img.height < 1) {
+          reject(new Error('Invalid image dimensions'));
+          return;
+        }
+        
+        resolve(img);
+      };
+      
+      img.onerror = () => {
+        clearTimeout(timeout);
+        reject(new Error(`Failed to load image: ${src}`));
+      };
+      
+      // Set crossOrigin for security when needed
+      if (src.startsWith('data:')) {
+        // Data URLs are safe to load directly
+        img.src = src;
+      } else {
+        // External URLs need CORS handling
+        img.crossOrigin = 'anonymous';
+        img.src = src;
+      }
     });
+  },
+
+  // Validate image source URL
+  validateImageSrc(src) {
+    if (typeof src !== 'string' || src.length === 0) {
+      return false;
+    }
+    
+    // Allow data URLs and relative paths only
+    if (src.startsWith('data:image/')) {
+      // Validate data URL format
+      const dataUrlPattern = /^data:image\/(jpeg|jpg|png|gif|webp|bmp);base64,/i;
+      return dataUrlPattern.test(src) && src.length < 10 * 1024 * 1024; // 10MB limit
+    }
+    
+    // Allow relative paths for team assets
+    if (src.startsWith('teams/') && !src.includes('..') && !src.includes('//')) {
+      return true;
+    }
+    
+    return false;
   },
 
   // Format file size
@@ -60,11 +121,22 @@ export const Utils = {
     return Math.max(min, Math.min(max, value));
   },
 
-  // Show toast notification
+  // Show toast notification with input sanitization
   showToast(message, type = 'info', duration = 3000) {
+    // Sanitize inputs
+    const sanitizedMessage = this.sanitizeText(message);
+    const sanitizedType = this.sanitizeText(type);
+    
+    // Validate type
+    const validTypes = ['info', 'success', 'error', 'warning'];
+    const safeType = validTypes.includes(sanitizedType) ? sanitizedType : 'info';
+    
+    // Validate duration
+    const safeDuration = Math.max(1000, Math.min(10000, parseInt(duration) || 3000));
+    
     const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.textContent = message;
+    toast.className = `toast toast-${safeType}`;
+    toast.textContent = sanitizedMessage; // Use textContent to prevent XSS
     
     document.body.appendChild(toast);
     
@@ -75,6 +147,57 @@ export const Utils = {
     setTimeout(() => {
       toast.classList.remove('show');
       setTimeout(() => toast.remove(), 300);
-    }, duration);
+    }, safeDuration);
+  },
+
+  // Sanitize text input to prevent XSS
+  sanitizeText(input) {
+    const div = document.createElement('div');
+    div.textContent = String(input || '');
+    return div.innerHTML;
+  },
+
+  // Validate and sanitize object properties
+  sanitizeObject(obj, allowedKeys = []) {
+    if (!obj || typeof obj !== 'object') {
+      return {};
+    }
+    
+    const sanitized = {};
+    for (const key of allowedKeys) {
+      if (obj.hasOwnProperty(key)) {
+        const value = obj[key];
+        if (typeof value === 'string') {
+          sanitized[key] = this.sanitizeText(value);
+        } else if (typeof value === 'number' && !isNaN(value)) {
+          sanitized[key] = value;
+        } else if (typeof value === 'boolean') {
+          sanitized[key] = value;
+        } else if (typeof value === 'object' && value !== null) {
+          // Handle nested objects recursively (with depth limit)
+          sanitized[key] = this.sanitizeObjectShallow(value);
+        }
+      }
+    }
+    return sanitized;
+  },
+
+  // Shallow sanitization for nested objects
+  sanitizeObjectShallow(obj) {
+    if (!obj || typeof obj !== 'object') {
+      return {};
+    }
+    
+    const sanitized = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (typeof value === 'string') {
+        sanitized[key] = this.sanitizeText(value);
+      } else if (typeof value === 'number' && !isNaN(value)) {
+        sanitized[key] = value;
+      } else if (typeof value === 'boolean') {
+        sanitized[key] = value;
+      }
+    }
+    return sanitized;
   }
 };

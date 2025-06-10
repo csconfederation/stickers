@@ -79,6 +79,39 @@ body {
   position: relative;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   background: white;
+  transition: all var(--transition-normal);
+}
+
+.canvas-wrapper.drawing-mode {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5), 0 4px 6px rgba(0, 0, 0, 0.3);
+  transform: scale(1.02);
+}
+
+.drawing-mode-tooltip {
+  position: absolute;
+  top: -2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(59, 130, 246, 0.9);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  z-index: 1000;
+  animation: fadeInDown 0.3s ease;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 #mainCanvas {
@@ -186,6 +219,49 @@ input[type="range"] {
 
 .drawing-tools.active {
   display: block;
+}
+
+.drawing-status {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: var(--radius-sm);
+}
+
+.drawing-instruction {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #93c5fd;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.drawing-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.apply-button {
+  position: relative;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.button-icon {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.apply-button:hover {
+  background-color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
 }
 
 /* ===== Canvas Elements ===== */

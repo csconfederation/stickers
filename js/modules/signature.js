@@ -48,6 +48,13 @@ export class SignatureManager {
     this.isDrawing = false;
     this.canvas.drawingCanvas.classList.remove('active');
     
+    // Remove drawing mode indicator
+    document.getElementById('canvasWrapper').classList.remove('drawing-mode');
+    document.getElementById('drawingModeTooltip').classList.add('hidden');
+    
+    // Hide drawing tools UI
+    document.getElementById('drawingTools').classList.remove('active');
+    
     // Get drawn signature bounds and crop
     const croppedData = this.cropDrawing();
     if (croppedData) {
@@ -105,22 +112,78 @@ export class SignatureManager {
 
   handleFileUpload(file) {
     const reader = new FileReader();
+    
+    // Set timeout for file reading
+    const timeout = setTimeout(() => {
+      reader.abort();
+    }, 30000); // 30 second timeout
+    
     reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        this.onSignatureReady(
-          { dataUrl: e.target.result, bounds: null }, 
-          'uploaded'
-        );
-      };
-      img.src = e.target.result;
+      clearTimeout(timeout);
+      
+      try {
+        const dataUrl = e.target.result;
+        
+        // Validate data URL
+        if (!this.validateDataUrl(dataUrl)) {
+          throw new Error('Invalid image data');
+        }
+        
+        const img = new Image();
+        img.onload = () => {
+          // Additional security check on loaded image
+          if (img.width > 4096 || img.height > 4096) {
+            console.error('Image too large');
+            return;
+          }
+          
+          this.onSignatureReady(
+            { dataUrl: dataUrl, bounds: null }, 
+            'uploaded'
+          );
+        };
+        
+        img.onerror = () => {
+          console.error('Failed to load uploaded image');
+        };
+        
+        img.src = dataUrl;
+      } catch (error) {
+        console.error('File upload error:', error);
+      }
     };
+    
+    reader.onerror = () => {
+      clearTimeout(timeout);
+      console.error('Failed to read file');
+    };
+    
     reader.readAsDataURL(file);
+  }
+
+  validateDataUrl(dataUrl) {
+    if (typeof dataUrl !== 'string') return false;
+    
+    // Check format
+    const dataUrlPattern = /^data:image\/(jpeg|jpg|png|gif|webp|bmp);base64,/i;
+    if (!dataUrlPattern.test(dataUrl)) return false;
+    
+    // Check size (5MB limit)
+    if (dataUrl.length > 5 * 1024 * 1024) return false;
+    
+    return true;
   }
 
   cancelDrawing() {
     this.isDrawing = false;
     this.canvas.clearDrawing();
     this.canvas.drawingCanvas.classList.remove('active');
+    
+    // Remove drawing mode indicator
+    document.getElementById('canvasWrapper').classList.remove('drawing-mode');
+    document.getElementById('drawingModeTooltip').classList.add('hidden');
+    
+    // Hide drawing tools UI
+    document.getElementById('drawingTools').classList.remove('active');
   }
 }
