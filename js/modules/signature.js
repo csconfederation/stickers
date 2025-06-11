@@ -125,49 +125,19 @@ export class SignatureManager {
   handleFileUpload(file) {
     const reader = new FileReader();
     
-    // Set timeout for file reading
-    const timeout = setTimeout(() => {
-      reader.abort();
-    }, 30000); // 30 second timeout
-    
     reader.onload = (e) => {
-      clearTimeout(timeout);
+      const dataUrl = e.target.result;
       
-      try {
-        const dataUrl = e.target.result;
-        
-        // Validate data URL
-        if (!this.validateDataUrl(dataUrl)) {
-          throw new Error('Invalid image data');
-        }
-        
-        const img = new Image();
-        img.onload = () => {
-          // Additional security check on loaded image
-          if (img.width > 4096 || img.height > 4096) {
-            console.error('Image too large');
-            return;
-          }
-          
-          this.onSignatureReady(
-            { dataUrl: dataUrl, bounds: null }, 
-            'uploaded'
-          );
-        };
-        
-        img.onerror = () => {
-          console.error('Failed to load uploaded image');
-        };
-        
-        img.src = dataUrl;
-      } catch (error) {
-        console.error('File upload error:', error);
+      if (!this.validateDataUrl(dataUrl)) {
+        Utils.showToast('Invalid image file', 'error');
+        return;
       }
+      
+      this.onSignatureReady({ dataUrl, bounds: null }, 'uploaded');
     };
     
     reader.onerror = () => {
-      clearTimeout(timeout);
-      console.error('Failed to read file');
+      Utils.showToast('Failed to read file', 'error');
     };
     
     reader.readAsDataURL(file);
