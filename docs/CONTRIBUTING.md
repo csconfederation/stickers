@@ -75,7 +75,6 @@ stickers/
 │   └── modules/            # Feature modules
 │       ├── canvas.js       # Canvas rendering
 │       ├── signature.js    # Signature handling
-│       ├── storage.js      # Data persistence
 │       ├── transform.js    # Transform controls
 │       └── utils.js        # Utility functions
 ├── teams/                  # Team asset directories

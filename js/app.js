@@ -1,4 +1,14 @@
-import { TEAMS, ASSET_TYPES, DEFAULT_STATE, DRAWING_CONFIG } from './config.js';
+import { 
+  TEAMS, 
+  ASSET_TYPES, 
+  DEFAULT_STATE, 
+  DRAWING_CONFIG,
+  ASSET_KEYS,
+  BACKGROUND_TYPES,
+  GRADIENT_DIRECTIONS,
+  CSS_CLASSES,
+  UI_TEXT
+} from './config.js';
 import { CanvasManager } from './modules/canvas.js';
 import { SignatureManager } from './modules/signature.js';
 import { TransformController } from './modules/transform.js';
@@ -42,7 +52,7 @@ class SignatureOverlayApp {
     // Add a default option
     const defaultOption = document.createElement('option');
     defaultOption.value = '';
-    defaultOption.textContent = 'Select a Team';
+    defaultOption.textContent = UI_TEXT.SELECT_TEAM_PLACEHOLDER;
     teamSelect.appendChild(defaultOption);
     
     // Add all teams (already sorted alphabetically)
@@ -68,6 +78,9 @@ class SignatureOverlayApp {
     document.getElementById('brushSize').value = DRAWING_CONFIG.defaultBrushSize;
     document.getElementById('brushSizeValue').textContent = DRAWING_CONFIG.defaultBrushSize;
     document.getElementById('brushColor').value = DRAWING_CONFIG.defaultColor;
+    
+    // Set UI text
+    document.getElementById('drawingInstruction').textContent = UI_TEXT.DRAWING_INSTRUCTION;
   }
 
   setupEventListeners() {
@@ -107,13 +120,10 @@ class SignatureOverlayApp {
     document.getElementById('gradientDirection').addEventListener('change', 
       (e) => this.updateGradientDirection(e.target.value));
 
-    // Transform controls
-    document.getElementById('scaleSlider').addEventListener('input', 
-      (e) => this.updateScale(e.target.value));
-    document.getElementById('rotationSlider').addEventListener('input', 
-      (e) => this.updateRotation(e.target.value));
-    document.getElementById('opacitySlider').addEventListener('input', 
-      (e) => this.updateOpacity(e.target.value));
+    // Transform controls - use generic handler
+    document.querySelectorAll('.transform-controls input[type="range"]').forEach(slider => {
+      slider.addEventListener('input', (e) => this.handleSliderUpdate(e));
+    });
     document.getElementById('resetTransform').addEventListener('click', 
       () => this.resetTransform());
     document.getElementById('deleteSignature').addEventListener('click', 
@@ -178,11 +188,15 @@ class SignatureOverlayApp {
     const selectedOption = document.getElementById('teamSelect').selectedOptions[0];
     
     if (!teamPrefix || !selectedOption) {
-      this.state.teamId = null;
-      this.state.teamPrefix = null;
-      this.state.teamName = null;
-      this.state.asset = null;
-      this.state.backgroundImage = null;
+      // Reset state when no team is selected
+      this.setState({
+        teamId: null,
+        teamPrefix: null,
+        teamName: null,
+        asset: null,
+        backgroundImage: null
+      });
+      
       document.getElementById('assetSelect').disabled = true;
       document.getElementById('assetSelect').value = '';
       document.getElementById('exportBtn').disabled = true;
@@ -213,15 +227,15 @@ class SignatureOverlayApp {
       this.canvas.setDimensions(assetConfig.width, assetConfig.height);
       
       // Show/hide background controls for sticker assets
-      const isSticker = assetType === 'Sticker' || assetType === 'StickerShadow';
+      const isSticker = assetType === ASSET_KEYS.STICKER || assetType === ASSET_KEYS.STICKER_SHADOW;
       const backgroundSection = document.getElementById('backgroundSection');
       
       if (isSticker) {
-        backgroundSection.classList.remove('hidden');
+        backgroundSection.classList.remove(CSS_CLASSES.HIDDEN);
       } else {
-        backgroundSection.classList.add('hidden');
+        backgroundSection.classList.add(CSS_CLASSES.HIDDEN);
         // Reset to original background for non-sticker assets
-        this.state.backgroundSettings.type = 'original';
+        this.state.backgroundSettings.type = BACKGROUND_TYPES.ORIGINAL;
       }
       
       // Render
@@ -245,19 +259,19 @@ class SignatureOverlayApp {
     const brushSize = parseInt(document.getElementById('brushSize').value);
     const brushColor = document.getElementById('brushColor').value;
     
-    document.getElementById('drawingTools').classList.add('active');
-    document.getElementById('uploadWrapper').classList.add('hidden');
+    document.getElementById('drawingTools').classList.add(CSS_CLASSES.ACTIVE);
+    document.getElementById('uploadWrapper').classList.add(CSS_CLASSES.HIDDEN);
     
     // Add visual indicator to canvas wrapper
-    document.getElementById('canvasWrapper').classList.add('drawing-mode');
-    document.getElementById('drawingModeTooltip').classList.remove('hidden');
+    document.getElementById('canvasWrapper').classList.add(CSS_CLASSES.DRAWING_MODE);
+    document.getElementById('drawingModeTooltip').classList.remove(CSS_CLASSES.HIDDEN);
     
     this.signature.startDrawing(brushSize, brushColor);
   }
 
   showUploadDialog() {
-    document.getElementById('drawingTools').classList.remove('active');
-    document.getElementById('uploadWrapper').classList.remove('hidden');
+    document.getElementById('drawingTools').classList.remove(CSS_CLASSES.ACTIVE);
+    document.getElementById('uploadWrapper').classList.remove(CSS_CLASSES.HIDDEN);
   }
 
   handleFileUpload(e) {
@@ -271,7 +285,7 @@ class SignatureOverlayApp {
     }
     
     this.signature.handleFileUpload(file);
-    document.getElementById('uploadWrapper').classList.add('hidden');
+    document.getElementById('uploadWrapper').classList.add(CSS_CLASSES.HIDDEN);
     e.target.value = ''; // Reset file input
   }
 
@@ -338,8 +352,8 @@ class SignatureOverlayApp {
       }
       
       // Show transform controls
-      document.getElementById('transformSection').classList.remove('hidden');
-      document.getElementById('signatureBox').classList.add('active');
+      document.getElementById('transformSection').classList.remove(CSS_CLASSES.HIDDEN);
+      document.getElementById('signatureBox').classList.add(CSS_CLASSES.ACTIVE);
       
       // Enable export button if we have both background and signature
       if (this.state.backgroundImage) {
@@ -364,27 +378,37 @@ class SignatureOverlayApp {
     this.debouncedSaveState();
   }
 
-  updateScale(value) {
-    const safeValue = this.validateNumericInput(value, 10, 200, 100);
-    this.state.transform.scale = safeValue / 100;
-    document.getElementById('scaleValue').textContent = safeValue + '%';
-    this.updateSignatureBox();
-    this.debouncedRender();
-  }
-
-  updateRotation(value) {
-    const safeValue = this.validateNumericInput(value, -180, 180, 0);
-    this.state.transform.rotation = safeValue;
-    document.getElementById('rotationValue').textContent = safeValue + '°';
-    this.updateSignatureBox();
-    this.debouncedRender();
-  }
-
-  updateOpacity(value) {
-    const safeValue = this.validateNumericInput(value, 0, 100, 100);
-    this.state.transform.opacity = safeValue / 100;
-    document.getElementById('opacityValue').textContent = safeValue + '%';
-    this.debouncedRender();
+  handleSliderUpdate(e) {
+    const slider = e.target;
+    const key = slider.dataset.stateKey;
+    const unit = slider.dataset.unit || '';
+    const multiplier = parseFloat(slider.dataset.multiplier) || 1;
+    const value = parseFloat(slider.value);
+    const min = parseFloat(slider.min);
+    const max = parseFloat(slider.max);
+    
+    // Get default value based on key
+    const defaults = { scale: 100, rotation: 0, opacity: 100 };
+    const defaultValue = defaults[key] || 0;
+    
+    // Validate value
+    const safeValue = this.validateNumericInput(value, min, max, defaultValue);
+    
+    // Update display
+    const displayValueEl = slider.nextElementSibling;
+    if (displayValueEl) {
+      displayValueEl.textContent = `${safeValue}${unit}`;
+    }
+    
+    // Update state
+    this.setState({
+      transform: { ...this.state.transform, [key]: safeValue * multiplier }
+    });
+    
+    // Update signature box for scale and rotation changes
+    if (key === 'scale' || key === 'rotation') {
+      this.updateSignatureBox();
+    }
   }
 
   updateBrushSize(value) {
@@ -402,65 +426,72 @@ class SignatureOverlayApp {
 
   // Background control methods
   updateBackgroundType(type) {
-    const validTypes = ['original', 'solid', 'gradient', 'transparent'];
-    const safeType = validTypes.includes(type) ? type : 'original';
-    this.state.backgroundSettings.type = safeType;
+    const validTypes = Object.values(BACKGROUND_TYPES);
+    const safeType = validTypes.includes(type) ? type : BACKGROUND_TYPES.ORIGINAL;
     
     // Show/hide relevant controls
-    document.getElementById('solidColorGroup').classList.toggle('hidden', safeType !== 'solid');
-    document.getElementById('gradientGroup').classList.toggle('hidden', safeType !== 'gradient');
+    document.getElementById('solidColorGroup').classList.toggle(CSS_CLASSES.HIDDEN, safeType !== BACKGROUND_TYPES.SOLID);
+    document.getElementById('gradientGroup').classList.toggle(CSS_CLASSES.HIDDEN, safeType !== BACKGROUND_TYPES.GRADIENT);
     
-    this.debouncedRender();
-    this.debouncedSaveState();
+    this.setState({
+      backgroundSettings: { ...this.state.backgroundSettings, type: safeType }
+    });
   }
 
   updateBackgroundColor(color) {
     const safeColor = this.validateColorInput(color);
-    this.state.backgroundSettings.solidColor = safeColor;
-    this.debouncedRender();
-    this.debouncedSaveState();
+    this.setState({
+      backgroundSettings: { ...this.state.backgroundSettings, solidColor: safeColor }
+    });
   }
 
   updateGradientColor1(color) {
     const safeColor = this.validateColorInput(color);
-    this.state.backgroundSettings.gradientColor1 = safeColor;
-    this.debouncedRender();
-    this.debouncedSaveState();
+    this.setState({
+      backgroundSettings: { ...this.state.backgroundSettings, gradientColor1: safeColor }
+    });
   }
 
   updateGradientColor2(color) {
     const safeColor = this.validateColorInput(color);
-    this.state.backgroundSettings.gradientColor2 = safeColor;
-    this.debouncedRender();
-    this.debouncedSaveState();
+    this.setState({
+      backgroundSettings: { ...this.state.backgroundSettings, gradientColor2: safeColor }
+    });
   }
 
   updateGradientDirection(direction) {
-    const validDirections = ['to-bottom', 'to-right', 'to-bottom-right', 'to-bottom-left'];
-    const safeDirection = validDirections.includes(direction) ? direction : 'to-bottom';
-    this.state.backgroundSettings.gradientDirection = safeDirection;
-    this.debouncedRender();
-    this.debouncedSaveState();
+    const validDirections = Object.values(GRADIENT_DIRECTIONS);
+    const safeDirection = validDirections.includes(direction) ? direction : GRADIENT_DIRECTIONS.TO_BOTTOM;
+    this.setState({
+      backgroundSettings: { ...this.state.backgroundSettings, gradientDirection: safeDirection }
+    });
   }
 
   resetTransform() {
-    this.state.transform = { ...DEFAULT_STATE.transform };
+    this.setState({
+      transform: { ...DEFAULT_STATE.transform }
+    });
     
-    // Update UI
-    document.getElementById('scaleSlider').value = 100;
-    document.getElementById('scaleValue').textContent = '100%';
-    document.getElementById('rotationSlider').value = 0;
-    document.getElementById('rotationValue').textContent = '0°';
-    document.getElementById('opacitySlider').value = 100;
-    document.getElementById('opacityValue').textContent = '100%';
+    // Update UI sliders
+    document.querySelectorAll('.transform-controls input[type="range"]').forEach(slider => {
+      const key = slider.dataset.stateKey;
+      const unit = slider.dataset.unit || '';
+      const multiplier = parseFloat(slider.dataset.multiplier) || 1;
+      const defaultValue = DEFAULT_STATE.transform[key] / multiplier;
+      
+      slider.value = defaultValue;
+      const displayValueEl = slider.nextElementSibling;
+      if (displayValueEl) {
+        displayValueEl.textContent = `${defaultValue}${unit}`;
+      }
+    });
     
     this.updateSignatureBox();
-    this.render();
   }
 
   finishEditingSignature() {
     // Hide the signature box outline
-    document.getElementById('signatureBox').classList.remove('active');
+    document.getElementById('signatureBox').classList.remove(CSS_CLASSES.ACTIVE);
     
     // Enable export button if we have both background and signature
     if (this.state.backgroundImage && this.state.signature) {
@@ -476,8 +507,8 @@ class SignatureOverlayApp {
     this.state.signature = null;
     this.state.signatureType = null;
     
-    document.getElementById('transformSection').classList.add('hidden');
-    document.getElementById('signatureBox').classList.remove('active');
+    document.getElementById('transformSection').classList.add(CSS_CLASSES.HIDDEN);
+    document.getElementById('signatureBox').classList.remove(CSS_CLASSES.ACTIVE);
     
     // Keep export buttons enabled if we still have a background
     // (user can export background without signature)
@@ -487,6 +518,23 @@ class SignatureOverlayApp {
     
     this.render();
     Utils.showToast('Signature deleted', 'info');
+  }
+
+  setState(updates) {
+    // Merge updates with current state
+    Object.keys(updates).forEach(key => {
+      if (typeof updates[key] === 'object' && !Array.isArray(updates[key]) && updates[key] !== null) {
+        // Deep merge for nested objects
+        this.state[key] = { ...this.state[key], ...updates[key] };
+      } else {
+        // Direct assignment for primitives and arrays
+        this.state[key] = updates[key];
+      }
+    });
+    
+    // Trigger render and save
+    this.debouncedRender();
+    this.debouncedSaveState();
   }
 
   updateSignatureBox() {

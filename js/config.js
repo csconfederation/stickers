@@ -75,6 +75,23 @@ export const ASSET_TYPES = {
   }
 };
 
+// Note: These constants must be defined before DEFAULT_STATE
+// Background type constants
+export const BACKGROUND_TYPES = {
+  ORIGINAL: 'original',
+  SOLID: 'solid',
+  GRADIENT: 'gradient',
+  TRANSPARENT: 'transparent'
+};
+
+// Gradient direction constants
+export const GRADIENT_DIRECTIONS = {
+  TO_BOTTOM: 'to-bottom',
+  TO_RIGHT: 'to-right',
+  TO_BOTTOM_RIGHT: 'to-bottom-right',
+  TO_BOTTOM_LEFT: 'to-bottom-left'
+};
+
 export const DEFAULT_STATE = {
   teamId: null,
   teamPrefix: null,
@@ -91,11 +108,11 @@ export const DEFAULT_STATE = {
     opacity: 1
   },
   backgroundSettings: {
-    type: 'original',
+    type: BACKGROUND_TYPES.ORIGINAL,
     solidColor: '#ffffff',
     gradientColor1: '#ffffff',
     gradientColor2: '#000000',
-    gradientDirection: 'to-bottom'
+    gradientDirection: GRADIENT_DIRECTIONS.TO_BOTTOM
   }
 };
 
@@ -104,4 +121,30 @@ export const DRAWING_CONFIG = {
   minBrushSize: 1,
   maxBrushSize: 20,
   defaultColor: '#000000'
+};
+
+// Asset key constants
+export const ASSET_KEYS = {
+  STICKER: 'Sticker',
+  STICKER_SHADOW: 'StickerShadow',
+  PROFILE_PICTURE: 'ProfilePicture',
+  DISCORD_BANNER: 'DiscordBanner',
+  TWITTER_BANNER: 'TwitterBanner',
+  YOUTUBE_BANNER: 'YoutubeBanner',
+  TWITCH_BANNER: 'TwitchBanner',
+  DESKTOP_BACKGROUND: 'DesktopBackground'
+};
+
+// CSS class constants
+export const CSS_CLASSES = {
+  HIDDEN: 'hidden',
+  ACTIVE: 'active',
+  DRAWING_MODE: 'drawing-mode'
+};
+
+// UI text constants
+export const UI_TEXT = {
+  DRAWING_INSTRUCTION: 'Draw your signature on the canvas below, then click "Apply Signature" when finished.',
+  DRAWING_MODE_TOOLTIP: 'Click and drag to draw on the canvas',
+  SELECT_TEAM_PLACEHOLDER: 'Select a Team'
 };

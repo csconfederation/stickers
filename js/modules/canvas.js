@@ -1,3 +1,5 @@
+import { ASSET_KEYS, BACKGROUND_TYPES, GRADIENT_DIRECTIONS } from '../config.js';
+
 export class CanvasManager {
   constructor(mainCanvasId, drawingCanvasId) {
     this.mainCanvas = document.getElementById(mainCanvasId);
@@ -36,9 +38,9 @@ export class CanvasManager {
     // Draw background
     if (state.backgroundImage) {
       // Check if we need custom background for sticker assets
-      const isSticker = state.asset === 'Sticker' || state.asset === 'StickerShadow';
+      const isSticker = state.asset === ASSET_KEYS.STICKER || state.asset === ASSET_KEYS.STICKER_SHADOW;
       
-      if (isSticker && state.backgroundSettings.type !== 'original') {
+      if (isSticker && state.backgroundSettings.type !== BACKGROUND_TYPES.ORIGINAL) {
         // First draw the custom background
         this.renderCustomBackground(state.backgroundSettings);
         // Then draw the sticker image on top
@@ -125,14 +127,14 @@ export class CanvasManager {
     
     this.ctx.save();
     
-    if (type === 'solid') {
+    if (type === BACKGROUND_TYPES.SOLID) {
       this.ctx.fillStyle = solidColor;
       this.ctx.fillRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
-    } else if (type === 'gradient') {
+    } else if (type === BACKGROUND_TYPES.GRADIENT) {
       const gradient = this.createGradient(gradientColor1, gradientColor2, gradientDirection);
       this.ctx.fillStyle = gradient;
       this.ctx.fillRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
-    } else if (type === 'transparent') {
+    } else if (type === BACKGROUND_TYPES.TRANSPARENT) {
       // Do nothing - leave transparent
     }
     
@@ -143,16 +145,16 @@ export class CanvasManager {
     let gradient;
     
     switch (direction) {
-      case 'to-bottom':
+      case GRADIENT_DIRECTIONS.TO_BOTTOM:
         gradient = this.ctx.createLinearGradient(0, 0, 0, this.mainCanvas.height);
         break;
-      case 'to-right':
+      case GRADIENT_DIRECTIONS.TO_RIGHT:
         gradient = this.ctx.createLinearGradient(0, 0, this.mainCanvas.width, 0);
         break;
-      case 'to-bottom-right':
+      case GRADIENT_DIRECTIONS.TO_BOTTOM_RIGHT:
         gradient = this.ctx.createLinearGradient(0, 0, this.mainCanvas.width, this.mainCanvas.height);
         break;
-      case 'to-bottom-left':
+      case GRADIENT_DIRECTIONS.TO_BOTTOM_LEFT:
         gradient = this.ctx.createLinearGradient(this.mainCanvas.width, 0, 0, this.mainCanvas.height);
         break;
       default:

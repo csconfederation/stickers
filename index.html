@@ -41,7 +41,7 @@
                 
                 <div class="drawing-tools" id="drawingTools">
                     <div class="drawing-status">
-                        <p class="drawing-instruction">Draw your signature on the canvas below, then click "Apply Signature" when finished.</p>
+                        <p class="drawing-instruction" id="drawingInstruction">Draw your signature on the canvas below, then click "Apply Signature" when finished.</p>
                     </div>
                     <div class="form-group">
                         <label>Brush Size</label>
@@ -107,21 +107,21 @@
                     <div class="form-group">
                         <label>Scale</label>
                         <div class="slider-group">
-                            <input type="range" id="scaleSlider" min="10" max="200" value="100">
+                            <input type="range" id="scaleSlider" data-state-key="scale" data-unit="%" data-multiplier="0.01" min="10" max="200" value="100">
                             <span class="slider-value" id="scaleValue">100%</span>
                         </div>
                     </div>
                     <div class="form-group">
                         <label>Rotation</label>
                         <div class="slider-group">
-                            <input type="range" id="rotationSlider" min="-180" max="180" value="0">
+                            <input type="range" id="rotationSlider" data-state-key="rotation" data-unit="°" min="-180" max="180" value="0">
                             <span class="slider-value" id="rotationValue">0°</span>
                         </div>
                     </div>
                     <div class="form-group">
                         <label>Opacity</label>
                         <div class="slider-group">
-                            <input type="range" id="opacitySlider" min="0" max="100" value="100">
+                            <input type="range" id="opacitySlider" data-state-key="opacity" data-unit="%" data-multiplier="0.01" min="0" max="100" value="100">
                             <span class="slider-value" id="opacityValue">100%</span>
                         </div>
                     </div>

@@ -1,3 +1,5 @@
+import { CSS_CLASSES } from '../config.js';
+
 export class SignatureManager {
   constructor(canvas, onSignatureReady) {
     this.canvas = canvas;
@@ -49,11 +51,11 @@ export class SignatureManager {
     this.canvas.drawingCanvas.classList.remove('active');
     
     // Remove drawing mode indicator
-    document.getElementById('canvasWrapper').classList.remove('drawing-mode');
-    document.getElementById('drawingModeTooltip').classList.add('hidden');
+    document.getElementById('canvasWrapper').classList.remove(CSS_CLASSES.DRAWING_MODE);
+    document.getElementById('drawingModeTooltip').classList.add(CSS_CLASSES.HIDDEN);
     
     // Hide drawing tools UI
-    document.getElementById('drawingTools').classList.remove('active');
+    document.getElementById('drawingTools').classList.remove(CSS_CLASSES.ACTIVE);
     
     // Get drawn signature bounds and crop
     const croppedData = this.cropDrawing();
@@ -180,10 +182,10 @@ export class SignatureManager {
     this.canvas.drawingCanvas.classList.remove('active');
     
     // Remove drawing mode indicator
-    document.getElementById('canvasWrapper').classList.remove('drawing-mode');
-    document.getElementById('drawingModeTooltip').classList.add('hidden');
+    document.getElementById('canvasWrapper').classList.remove(CSS_CLASSES.DRAWING_MODE);
+    document.getElementById('drawingModeTooltip').classList.add(CSS_CLASSES.HIDDEN);
     
     // Hide drawing tools UI
-    document.getElementById('drawingTools').classList.remove('active');
+    document.getElementById('drawingTools').classList.remove(CSS_CLASSES.ACTIVE);
   }
 }
