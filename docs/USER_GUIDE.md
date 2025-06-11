@@ -18,7 +18,7 @@ A comprehensive guide to using the CSC Signature Overlay Tool for creating custo
 ## Getting Started
 
 ### System Requirements
-- Modern web browser (Chrome 88+, Firefox 85+, Safari 14+)
+- Modern web browser (Chrome 100+, Firefox 100+, Safari 16+)
 - JavaScript enabled
 - Minimum 1024×768 screen resolution
 - 50MB available storage for automatic state saving

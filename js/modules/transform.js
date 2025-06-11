@@ -83,28 +83,21 @@ export class TransformController {
   }
 
   handleResize(dx, dy) {
-    // Calculate new scale based on handle position
-    const aspectRatio = this.signatureDimensions.width / this.signatureDimensions.height;
-    let scaleChange = 0;
+    // Simplified scale calculation based on drag distance
+    const handleMultipliers = {
+      'br': { x: 1, y: 1 },
+      'tl': { x: -1, y: -1 },
+      'tr': { x: 1, y: -1 },
+      'bl': { x: -1, y: 1 }
+    };
     
-    switch (this.activeHandle) {
-      case 'br':
-        scaleChange = Math.max(dx, dy) / 
-          Math.max(this.signatureDimensions.width, this.signatureDimensions.height);
-        break;
-      case 'tl':
-        scaleChange = -Math.max(dx, dy) / 
-          Math.max(this.signatureDimensions.width, this.signatureDimensions.height);
-        break;
-      case 'tr':
-        scaleChange = Math.max(dx, -dy) / 
-          Math.max(this.signatureDimensions.width, this.signatureDimensions.height);
-        break;
-      case 'bl':
-        scaleChange = Math.max(-dx, dy) / 
-          Math.max(this.signatureDimensions.width, this.signatureDimensions.height);
-        break;
-    }
+    const multiplier = handleMultipliers[this.activeHandle];
+    if (!multiplier) return;
+    
+    const effectiveDx = dx * multiplier.x;
+    const effectiveDy = dy * multiplier.y;
+    const maxDimension = Math.max(this.signatureDimensions.width, this.signatureDimensions.height);
+    const scaleChange = Math.max(effectiveDx, effectiveDy) / maxDimension;
     
     const newScale = Math.max(0.1, Math.min(5, this.startTransform.scale + scaleChange));
     

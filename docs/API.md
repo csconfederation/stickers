@@ -53,8 +53,21 @@ exportImage()                   // Export final image as PNG
 
 ##### State Management
 ```javascript
+setState(updates)               // Centralized state updates with auto-render/save
 saveState()                     // Auto-save current state to localStorage
 loadSavedState()               // Restore saved state on startup
+```
+
+**setState Method Details:**
+```javascript
+// Merge updates into current state and trigger render/save
+setState({
+  transform: { scale: 1.5, rotation: 45 },
+  backgroundSettings: { type: 'solid', solidColor: '#ff0000' }
+})
+
+// Supports nested object updates with automatic merging
+// Automatically calls debouncedRender() and debouncedSaveState()
 ```
 
 ##### Input Validation
@@ -270,6 +283,103 @@ Drawing tool configuration:
 }
 ```
 
+#### ASSET_KEYS
+Constants for asset type keys:
+```javascript
+{
+  STICKER: 'Sticker',
+  STICKER_SHADOW: 'StickerShadow',
+  PROFILE_PICTURE: 'ProfilePicture',
+  DISCORD_BANNER: 'DiscordBanner',
+  TWITTER_BANNER: 'TwitterBanner',
+  YOUTUBE_BANNER: 'YoutubeBanner',
+  TWITCH_BANNER: 'TwitchBanner',
+  DESKTOP_BACKGROUND: 'DesktopBackground'
+}
+```
+
+#### BACKGROUND_TYPES
+Constants for background types:
+```javascript
+{
+  ORIGINAL: 'original',
+  SOLID: 'solid',
+  GRADIENT: 'gradient',
+  TRANSPARENT: 'transparent'
+}
+```
+
+#### GRADIENT_DIRECTIONS
+Constants for gradient directions:
+```javascript
+{
+  TO_BOTTOM: 'to-bottom',
+  TO_RIGHT: 'to-right',
+  TO_BOTTOM_RIGHT: 'to-bottom-right',
+  TO_BOTTOM_LEFT: 'to-bottom-left'
+}
+```
+
+#### CSS_CLASSES
+Constants for CSS class names:
+```javascript
+{
+  HIDDEN: 'hidden',
+  ACTIVE: 'active',
+  DRAWING_MODE: 'drawing-mode'
+}
+```
+
+#### UI_TEXT
+Constants for UI text strings:
+```javascript
+{
+  DRAWING_INSTRUCTION: 'Draw your signature on the canvas below, then click "Apply Signature" when finished.',
+  DRAWING_MODE_TOOLTIP: 'Click and drag to draw on the canvas',
+  SELECT_TEAM_PLACEHOLDER: 'Select a Team'
+}
+```
+
+#### FILE_LIMITS
+File validation and size limits:
+```javascript
+{
+  MAX_FILE_SIZE: 5242880,        // 5MB in bytes
+  MIN_FILE_SIZE: 100,            // 100 bytes minimum
+  MAX_IMAGE_DIMENSION: 4096,     // Maximum width/height
+  MIN_IMAGE_DIMENSION: 1,        // Minimum width/height
+  FILE_READ_TIMEOUT: 30000,      // 30 seconds
+  IMAGE_LOAD_TIMEOUT: 10000,     // 10 seconds
+  MAX_DATA_URL_SIZE: 10485760    // 10MB for data URLs
+}
+```
+
+#### TIMING
+Timing and performance constants:
+```javascript
+{
+  RENDER_DEBOUNCE: 16,           // 60fps render debounce
+  SAVE_DEBOUNCE: 500,            // Auto-save debounce
+  TOAST_DURATION: 3000,          // Toast notification duration
+  TOAST_ANIMATION: 300,          // Toast animation duration
+  PERFORMANCE_CHECK_INTERVAL: 30000,  // Performance monitoring interval
+  MEMORY_WARNING_THRESHOLD: 52428800  // 50MB memory warning threshold
+}
+```
+
+#### TRANSFORM_LIMITS
+Transform value constraints:
+```javascript
+{
+  MIN_SCALE: 0.1,                // Minimum scale factor
+  MAX_SCALE: 5,                  // Maximum scale factor
+  MIN_ROTATION: -180,            // Minimum rotation in degrees
+  MAX_ROTATION: 180,             // Maximum rotation in degrees
+  MIN_OPACITY: 0,                // Minimum opacity
+  MAX_OPACITY: 1                 // Maximum opacity
+}
+```
+
 ## Event System
 
 ### Application Events
@@ -281,10 +391,18 @@ Drawing tool configuration:
 
 #### Transform Controls
 ```javascript
-'input' on sliders -> updateScale/Rotation/Opacity()
+'input' on sliders -> handleSliderUpdate()  // Generic handler for all transform sliders
 'mousedown' on canvas -> startDrag()
 'mousemove' on document -> handleMove()
 'mouseup' on document -> endTransform()
+```
+
+**Slider Update System:**
+```javascript
+// Data attributes on sliders define behavior:
+// data-state-key: property name in state.transform
+// data-unit: display unit (%, °)
+// data-multiplier: value conversion factor (0.01 for percentage)
 ```
 
 #### Background Controls

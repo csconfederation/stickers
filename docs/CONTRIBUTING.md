@@ -19,7 +19,7 @@ Thank you for your interest in contributing to the CSC Signature Overlay Tool! T
 
 ### Prerequisites
 - **Node.js** (optional, for development tools)
-- **Modern Browser** (Chrome 88+, Firefox 85+, Safari 14+)
+- **Modern Browser** (Chrome 100+, Firefox 100+, Safari 16+)
 - **Git** for version control
 - **Text Editor** with JavaScript support (VS Code recommended)
 

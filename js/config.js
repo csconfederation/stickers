@@ -148,3 +148,34 @@ export const UI_TEXT = {
   DRAWING_MODE_TOOLTIP: 'Click and drag to draw on the canvas',
   SELECT_TEAM_PLACEHOLDER: 'Select a Team'
 };
+
+// File size and dimension limits
+export const FILE_LIMITS = {
+  MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
+  MIN_FILE_SIZE: 100, // 100 bytes
+  MAX_IMAGE_DIMENSION: 4096,
+  MIN_IMAGE_DIMENSION: 1,
+  FILE_READ_TIMEOUT: 30000, // 30 seconds
+  IMAGE_LOAD_TIMEOUT: 10000, // 10 seconds
+  MAX_DATA_URL_SIZE: 10 * 1024 * 1024 // 10MB
+};
+
+// Animation and timing constants
+export const TIMING = {
+  RENDER_DEBOUNCE: 16, // 60fps
+  SAVE_DEBOUNCE: 500,
+  TOAST_DURATION: 3000,
+  TOAST_ANIMATION: 300,
+  PERFORMANCE_CHECK_INTERVAL: 30000, // 30 seconds
+  MEMORY_WARNING_THRESHOLD: 50 * 1024 * 1024 // 50MB
+};
+
+// Transform limits
+export const TRANSFORM_LIMITS = {
+  MIN_SCALE: 0.1,
+  MAX_SCALE: 5,
+  MIN_ROTATION: -180,
+  MAX_ROTATION: 180,
+  MIN_OPACITY: 0,
+  MAX_OPACITY: 1
+};

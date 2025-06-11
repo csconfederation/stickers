@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSC Sticker Generator</title>
+    <title>CSC Signature Overlay Tool</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <a href="#mainCanvas" class="skip-link">Skip to main content</a>
     <header class="header">
-        <h1>CSC Sticker Generator</h1>
+        <h1>CSC Signature Overlay Tool</h1>
     </header>
 
     <div class="main-container">
@@ -18,13 +19,13 @@
                 <h2>Background</h2>
                 <div class="form-group">
                     <label for="teamSelect">Team</label>
-                    <select id="teamSelect">
+                    <select id="teamSelect" aria-label="Select team for background" aria-required="true">
                         <!-- Options populated by JavaScript -->
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="assetSelect">Asset Type</label>
-                    <select id="assetSelect" disabled>
+                    <select id="assetSelect" disabled aria-label="Select asset type" aria-required="true">
                         <option value="">Select Asset</option>
                         <!-- Options populated by JavaScript -->
                     </select>
@@ -134,7 +135,7 @@
             <!-- Export -->
             <section class="section">
                 <h2>Export</h2>
-                <button id="exportBtn" class="primary" disabled>Download Image</button>
+                <button id="exportBtn" class="primary" disabled aria-label="Download generated image">Download Image</button>
             </section>
         </aside>
 
@@ -143,8 +144,8 @@
                 <div class="drawing-mode-tooltip hidden" id="drawingModeTooltip">
                     ✏️ Drawing Mode - Click 'Apply Signature' when finished
                 </div>
-                <canvas id="mainCanvas"></canvas>
-                <canvas id="drawingCanvas"></canvas>
+                <canvas id="mainCanvas" role="img" aria-label="Main canvas for sticker composition"></canvas>
+                <canvas id="drawingCanvas" role="img" aria-label="Drawing canvas for signature"></canvas>
                 <div class="signature-box" id="signatureBox">
                     <div class="transform-handle tl" data-handle="tl"></div>
                     <div class="transform-handle tr" data-handle="tr"></div>

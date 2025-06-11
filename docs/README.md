@@ -78,7 +78,7 @@ docs/
 ### Quick Reference
 - **Supported Teams**: 22 CSC franchise teams ([Asset Documentation](ASSETS.md))
 - **Supported Formats**: PNG, JPG, GIF, WebP, BMP ([User Guide](USER_GUIDE.md))
-- **Browser Support**: Chrome 88+, Firefox 85+, Safari 14+ ([Contributing Guide](CONTRIBUTING.md))
+- **Browser Support**: Chrome 100+, Firefox 100+, Safari 16+ ([Contributing Guide](CONTRIBUTING.md))
 - **Security Features**: Input validation, XSS protection, file validation ([Security Documentation](SECURITY.md))
 
 ## 🤝 Getting Help

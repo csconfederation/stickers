@@ -7,7 +7,10 @@ import {
   BACKGROUND_TYPES,
   GRADIENT_DIRECTIONS,
   CSS_CLASSES,
-  UI_TEXT
+  UI_TEXT,
+  FILE_LIMITS,
+  TIMING,
+  TRANSFORM_LIMITS
 } from './config.js';
 import { CanvasManager } from './modules/canvas.js';
 import { SignatureManager } from './modules/signature.js';
@@ -18,15 +21,35 @@ class SignatureOverlayApp {
   constructor() {
     this.state = { ...DEFAULT_STATE };
     this.initializeModules();
+    this.cacheElements();
     this.setupUI();
     this.setupEventListeners();
     this.loadSavedState();
     
     // Performance optimization: debounced render
-    this.debouncedRender = Utils.debounce(() => this.render(), 16); // 60fps
+    this.debouncedRender = Utils.debounce(() => this.render(), TIMING.RENDER_DEBOUNCE);
     
     // Auto-save state changes
-    this.debouncedSaveState = Utils.debounce(() => this.saveState(), 500);
+    this.debouncedSaveState = Utils.debounce(() => this.saveState(), TIMING.SAVE_DEBOUNCE);
+  }
+
+  cacheElements() {
+    // Cache frequently accessed DOM elements
+    this.elements = {
+      teamSelect: document.getElementById('teamSelect'),
+      assetSelect: document.getElementById('assetSelect'),
+      brushSize: document.getElementById('brushSize'),
+      brushSizeValue: document.getElementById('brushSizeValue'),
+      brushColor: document.getElementById('brushColor'),
+      drawingTools: document.getElementById('drawingTools'),
+      uploadWrapper: document.getElementById('uploadWrapper'),
+      canvasWrapper: document.getElementById('canvasWrapper'),
+      drawingModeTooltip: document.getElementById('drawingModeTooltip'),
+      transformSection: document.getElementById('transformSection'),
+      signatureBox: document.getElementById('signatureBox'),
+      backgroundSection: document.getElementById('backgroundSection'),
+      exportBtn: document.getElementById('exportBtn')
+    };
   }
 
   initializeModules() {
@@ -47,7 +70,7 @@ class SignatureOverlayApp {
 
   setupUI() {
     // Populate team dropdown
-    const teamSelect = document.getElementById('teamSelect');
+    const teamSelect = this.elements.teamSelect;
     
     // Add a default option
     const defaultOption = document.createElement('option');
@@ -66,7 +89,7 @@ class SignatureOverlayApp {
     });
     
     // Populate asset type dropdown
-    const assetSelect = document.getElementById('assetSelect');
+    const assetSelect = this.elements.assetSelect;
     Object.entries(ASSET_TYPES).forEach(([key, asset]) => {
       const option = document.createElement('option');
       option.value = key;
@@ -75,9 +98,9 @@ class SignatureOverlayApp {
     });
     
     // Set default drawing values
-    document.getElementById('brushSize').value = DRAWING_CONFIG.defaultBrushSize;
-    document.getElementById('brushSizeValue').textContent = DRAWING_CONFIG.defaultBrushSize;
-    document.getElementById('brushColor').value = DRAWING_CONFIG.defaultColor;
+    this.elements.brushSize.value = DRAWING_CONFIG.defaultBrushSize;
+    this.elements.brushSizeValue.textContent = DRAWING_CONFIG.defaultBrushSize;
+    this.elements.brushColor.value = DRAWING_CONFIG.defaultColor;
     
     // Set UI text
     document.getElementById('drawingInstruction').textContent = UI_TEXT.DRAWING_INSTRUCTION;
@@ -185,7 +208,7 @@ class SignatureOverlayApp {
 
   // Background management
   async handleTeamChange(teamPrefix) {
-    const selectedOption = document.getElementById('teamSelect').selectedOptions[0];
+    const selectedOption = this.elements.teamSelect.selectedOptions[0];
     
     if (!teamPrefix || !selectedOption) {
       // Reset state when no team is selected
@@ -197,9 +220,9 @@ class SignatureOverlayApp {
         backgroundImage: null
       });
       
-      document.getElementById('assetSelect').disabled = true;
-      document.getElementById('assetSelect').value = '';
-      document.getElementById('exportBtn').disabled = true;
+      this.elements.assetSelect.disabled = true;
+      this.elements.assetSelect.value = '';
+      this.elements.exportBtn.disabled = true;
       this.canvas.clear();
       return;
     }
@@ -209,7 +232,7 @@ class SignatureOverlayApp {
     this.state.teamPrefix = teamPrefix;
     this.state.teamName = selectedOption.dataset.teamName;
     
-    document.getElementById('assetSelect').disabled = false;
+    this.elements.assetSelect.disabled = false;
   }
 
   async handleAssetChange(assetType) {
@@ -290,15 +313,14 @@ class SignatureOverlayApp {
   }
 
   validateImageFile(file) {
-    // Check file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
+    // Check file size
+    if (file.size > FILE_LIMITS.MAX_FILE_SIZE) {
       Utils.showToast('File too large. Maximum size is 5MB', 'error');
       return false;
     }
 
     // Minimum file size check (prevent empty files)
-    if (file.size < 100) {
+    if (file.size < FILE_LIMITS.MIN_FILE_SIZE) {
       Utils.showToast('File too small. Please select a valid image', 'error');
       return false;
     }
@@ -379,49 +401,70 @@ class SignatureOverlayApp {
   }
 
   handleSliderUpdate(e) {
-    const slider = e.target;
-    const key = slider.dataset.stateKey;
-    const unit = slider.dataset.unit || '';
-    const multiplier = parseFloat(slider.dataset.multiplier) || 1;
-    const value = parseFloat(slider.value);
-    const min = parseFloat(slider.min);
-    const max = parseFloat(slider.max);
-    
-    // Get default value based on key
-    const defaults = { scale: 100, rotation: 0, opacity: 100 };
-    const defaultValue = defaults[key] || 0;
-    
-    // Validate value
-    const safeValue = this.validateNumericInput(value, min, max, defaultValue);
-    
-    // Update display
-    const displayValueEl = slider.nextElementSibling;
-    if (displayValueEl) {
-      displayValueEl.textContent = `${safeValue}${unit}`;
-    }
-    
-    // Update state
-    this.setState({
-      transform: { ...this.state.transform, [key]: safeValue * multiplier }
-    });
-    
-    // Update signature box for scale and rotation changes
-    if (key === 'scale' || key === 'rotation') {
-      this.updateSignatureBox();
+    try {
+      const slider = e.target;
+      const key = slider.dataset.stateKey;
+      const unit = slider.dataset.unit || '';
+      const multiplier = parseFloat(slider.dataset.multiplier) || 1;
+      const value = parseFloat(slider.value);
+      const min = parseFloat(slider.min);
+      const max = parseFloat(slider.max);
+      
+      if (!key) {
+        throw new Error('Slider missing data-state-key attribute');
+      }
+      
+      // Get default value based on key
+      const defaults = { scale: 100, rotation: 0, opacity: 100 };
+      const defaultValue = defaults[key] || 0;
+      
+      // Validate value
+      const safeValue = this.validateNumericInput(value, min, max, defaultValue);
+      
+      // Update display
+      const displayValueEl = slider.nextElementSibling;
+      if (displayValueEl) {
+        displayValueEl.textContent = `${safeValue}${unit}`;
+      }
+      
+      // Update state
+      this.setState({
+        transform: { ...this.state.transform, [key]: safeValue * multiplier }
+      });
+      
+      // Update signature box for scale and rotation changes
+      if (key === 'scale' || key === 'rotation') {
+        this.updateSignatureBox();
+      }
+    } catch (error) {
+      console.error('Failed to update slider:', error);
+      Utils.showToast('Failed to update transform control', 'error');
     }
   }
 
   updateBrushSize(value) {
-    document.getElementById('brushSizeValue').textContent = value;
-    // Always update signature manager brush settings
-    const color = document.getElementById('brushColor').value;
-    this.signature.updateBrushSettings(parseInt(value), color);
+    try {
+      const safeValue = this.validateNumericInput(value, DRAWING_CONFIG.minBrushSize, DRAWING_CONFIG.maxBrushSize, DRAWING_CONFIG.defaultBrushSize);
+      document.getElementById('brushSizeValue').textContent = safeValue;
+      // Always update signature manager brush settings
+      const color = document.getElementById('brushColor').value;
+      this.signature.updateBrushSettings(parseInt(safeValue), color);
+    } catch (error) {
+      console.error('Failed to update brush size:', error);
+      Utils.showToast('Failed to update brush size', 'error');
+    }
   }
 
   updateBrushColor(value) {
-    // Always update signature manager brush settings
-    const size = document.getElementById('brushSize').value;
-    this.signature.updateBrushSettings(parseInt(size), value);
+    try {
+      const safeColor = this.validateColorInput(value);
+      // Always update signature manager brush settings
+      const size = document.getElementById('brushSize').value;
+      this.signature.updateBrushSettings(parseInt(size), safeColor);
+    } catch (error) {
+      console.error('Failed to update brush color:', error);
+      Utils.showToast('Failed to update brush color', 'error');
+    }
   }
 
   // Background control methods
@@ -691,9 +734,24 @@ class SignatureOverlayApp {
   performanceMonitor() {
     if (typeof performance !== 'undefined' && performance.memory) {
       const memory = performance.memory;
-      if (memory.usedJSHeapSize > 50 * 1024 * 1024) { // 50MB
-        console.warn('High memory usage detected');
+      if (memory.usedJSHeapSize > TIMING.MEMORY_WARNING_THRESHOLD) {
+        console.warn('High memory usage detected:', Utils.formatFileSize(memory.usedJSHeapSize));
+        // Consider cleanup if memory is critically high
+        if (memory.usedJSHeapSize > TIMING.MEMORY_WARNING_THRESHOLD * 2) {
+          this.performCleanup();
+        }
       }
+    }
+  }
+
+  performCleanup() {
+    // Clear any cached images that aren't currently in use
+    if (!this.state.signature) {
+      this.canvas.clearDrawing();
+    }
+    // Force garbage collection hint
+    if (window.gc) {
+      window.gc();
     }
   }
 

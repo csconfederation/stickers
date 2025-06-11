@@ -5,14 +5,12 @@ export class SignatureManager {
     this.canvas = canvas;
     this.onSignatureReady = onSignatureReady;
     this.isDrawing = false;
-    this.currentPath = [];
   }
 
   startDrawing(brushSize, brushColor) {
     this.isDrawing = true;
     this.brushSize = brushSize;
     this.brushColor = brushColor;
-    this.currentPath = [];
     
     // Show drawing canvas
     this.canvas.drawingCanvas.classList.add('active');
@@ -22,14 +20,26 @@ export class SignatureManager {
     if (!this.isDrawing) return;
     
     this.canvas.startPath(x, y, this.brushColor, this.brushSize);
-    this.currentPath.push({ x, y });
   }
 
   handleDraw(x, y) {
     if (!this.isDrawing) return;
     
+    // Validate coordinates
+    if (!this.isValidCoordinate(x, y)) return;
+    
     this.canvas.drawTo(x, y);
-    this.currentPath.push({ x, y });
+  }
+
+  isValidCoordinate(x, y) {
+    return typeof x === 'number' && 
+           typeof y === 'number' && 
+           !isNaN(x) && 
+           !isNaN(y) &&
+           x >= 0 && 
+           y >= 0 &&
+           x <= this.canvas.drawingCanvas.width &&
+           y <= this.canvas.drawingCanvas.height;
   }
 
   updateBrushSettings(size, color) {
