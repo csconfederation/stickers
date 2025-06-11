@@ -1,4 +1,5 @@
 import { CSS_CLASSES } from '../config.js';
+import { Utils } from './utils.js';
 
 export class SignatureManager {
   constructor(canvas, onSignatureReady) {

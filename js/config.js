@@ -123,17 +123,6 @@ export const DRAWING_CONFIG = {
   defaultColor: '#000000'
 };
 
-// Asset key constants
-export const ASSET_KEYS = {
-  STICKER: 'Sticker',
-  STICKER_SHADOW: 'StickerShadow',
-  PROFILE_PICTURE: 'ProfilePicture',
-  DISCORD_BANNER: 'DiscordBanner',
-  TWITTER_BANNER: 'TwitterBanner',
-  YOUTUBE_BANNER: 'YoutubeBanner',
-  TWITCH_BANNER: 'TwitchBanner',
-  DESKTOP_BACKGROUND: 'DesktopBackground'
-};
 
 // CSS class constants
 export const CSS_CLASSES = {
@@ -165,9 +154,7 @@ export const TIMING = {
   RENDER_DEBOUNCE: 16, // 60fps
   SAVE_DEBOUNCE: 500,
   TOAST_DURATION: 3000,
-  TOAST_ANIMATION: 300,
-  PERFORMANCE_CHECK_INTERVAL: 30000, // 30 seconds
-  MEMORY_WARNING_THRESHOLD: 50 * 1024 * 1024 // 50MB
+  TOAST_ANIMATION: 300
 };
 
 // Transform limits

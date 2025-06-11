@@ -1,4 +1,4 @@
-import { ASSET_KEYS, BACKGROUND_TYPES, GRADIENT_DIRECTIONS } from '../config.js';
+import { BACKGROUND_TYPES, GRADIENT_DIRECTIONS } from '../config.js';
 
 export class CanvasManager {
   constructor(mainCanvasId, drawingCanvasId) {
@@ -10,6 +10,10 @@ export class CanvasManager {
     // Set up drawing context
     this.drawCtx.lineCap = 'round';
     this.drawCtx.lineJoin = 'round';
+    
+    // Initialize drawing state
+    this.currentColor = null;
+    this.currentSize = null;
   }
 
   setDimensions(width, height) {
@@ -38,7 +42,7 @@ export class CanvasManager {
     // Draw background
     if (state.backgroundImage) {
       // Check if we need custom background for sticker assets
-      const isSticker = state.asset === ASSET_KEYS.STICKER || state.asset === ASSET_KEYS.STICKER_SHADOW;
+      const isSticker = state.asset === 'Sticker' || state.asset === 'StickerShadow';
       
       if (isSticker && state.backgroundSettings.type !== BACKGROUND_TYPES.ORIGINAL) {
         // First draw the custom background

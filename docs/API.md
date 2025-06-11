@@ -38,10 +38,7 @@ updateOpacity(value)            // Opacity: 0-100%
 ##### Background Controls
 ```javascript
 updateBackgroundType(type)      // 'original', 'solid', 'gradient', 'transparent'
-updateBackgroundColor(color)    // Hex color string
-updateGradientColor1(color)     // Gradient start color
-updateGradientColor2(color)     // Gradient end color
-updateGradientDirection(dir)    // 'to-bottom', 'to-right', etc.
+updateBackgroundSetting(key, value) // Update any background setting
 ```
 
 ##### File Operations
@@ -283,20 +280,6 @@ Drawing tool configuration:
 }
 ```
 
-#### ASSET_KEYS
-Constants for asset type keys:
-```javascript
-{
-  STICKER: 'Sticker',
-  STICKER_SHADOW: 'StickerShadow',
-  PROFILE_PICTURE: 'ProfilePicture',
-  DISCORD_BANNER: 'DiscordBanner',
-  TWITTER_BANNER: 'TwitterBanner',
-  YOUTUBE_BANNER: 'YoutubeBanner',
-  TWITCH_BANNER: 'TwitchBanner',
-  DESKTOP_BACKGROUND: 'DesktopBackground'
-}
-```
 
 #### BACKGROUND_TYPES
 Constants for background types:
@@ -362,8 +345,7 @@ Timing and performance constants:
   SAVE_DEBOUNCE: 500,            // Auto-save debounce
   TOAST_DURATION: 3000,          // Toast notification duration
   TOAST_ANIMATION: 300,          // Toast animation duration
-  PERFORMANCE_CHECK_INTERVAL: 30000,  // Performance monitoring interval
-  MEMORY_WARNING_THRESHOLD: 52428800  // 50MB memory warning threshold
+  TOAST_ANIMATION: 300           // Toast animation duration
 }
 ```
 
@@ -408,7 +390,7 @@ Transform value constraints:
 #### Background Controls
 ```javascript
 'change' on backgroundType -> updateBackgroundType()
-'change' on color inputs -> updateBackgroundColor()
+'change' on color inputs -> updateBackgroundSetting()
 ```
 
 #### Drawing
@@ -437,7 +419,6 @@ Module-specific error handling with try/catch blocks and user feedback via toast
 - File uploads are strictly validated
 
 ### Memory Management
-- Performance monitoring with usage alerts
 - Resource cleanup on navigation
 - Debounced operations to prevent overload
 

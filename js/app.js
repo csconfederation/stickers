@@ -3,14 +3,12 @@ import {
   ASSET_TYPES, 
   DEFAULT_STATE, 
   DRAWING_CONFIG,
-  ASSET_KEYS,
   BACKGROUND_TYPES,
   GRADIENT_DIRECTIONS,
   CSS_CLASSES,
   UI_TEXT,
   FILE_LIMITS,
-  TIMING,
-  TRANSFORM_LIMITS
+  TIMING
 } from './config.js';
 import { CanvasManager } from './modules/canvas.js';
 import { SignatureManager } from './modules/signature.js';
@@ -135,13 +133,13 @@ class SignatureOverlayApp {
     document.getElementById('backgroundType').addEventListener('change', 
       (e) => this.updateBackgroundType(e.target.value));
     document.getElementById('backgroundColor').addEventListener('change', 
-      (e) => this.updateBackgroundColor(e.target.value));
+      (e) => this.updateBackgroundSetting('solidColor', e.target.value));
     document.getElementById('gradientColor1').addEventListener('change', 
-      (e) => this.updateGradientColor1(e.target.value));
+      (e) => this.updateBackgroundSetting('gradientColor1', e.target.value));
     document.getElementById('gradientColor2').addEventListener('change', 
-      (e) => this.updateGradientColor2(e.target.value));
+      (e) => this.updateBackgroundSetting('gradientColor2', e.target.value));
     document.getElementById('gradientDirection').addEventListener('change', 
-      (e) => this.updateGradientDirection(e.target.value));
+      (e) => this.updateBackgroundSetting('gradientDirection', e.target.value));
 
     // Transform controls - use generic handler
     document.querySelectorAll('.transform-controls input[type="range"]').forEach(slider => {
@@ -250,7 +248,7 @@ class SignatureOverlayApp {
       this.canvas.setDimensions(assetConfig.width, assetConfig.height);
       
       // Show/hide background controls for sticker assets
-      const isSticker = assetType === ASSET_KEYS.STICKER || assetType === ASSET_KEYS.STICKER_SHADOW;
+      const isSticker = assetType === 'Sticker' || assetType === 'StickerShadow';
       const backgroundSection = document.getElementById('backgroundSection');
       
       if (isSticker) {
@@ -401,44 +399,20 @@ class SignatureOverlayApp {
   }
 
   handleSliderUpdate(e) {
-    try {
-      const slider = e.target;
-      const key = slider.dataset.stateKey;
-      const unit = slider.dataset.unit || '';
-      const multiplier = parseFloat(slider.dataset.multiplier) || 1;
-      const value = parseFloat(slider.value);
-      const min = parseFloat(slider.min);
-      const max = parseFloat(slider.max);
-      
-      if (!key) {
-        throw new Error('Slider missing data-state-key attribute');
-      }
-      
-      // Get default value based on key
-      const defaults = { scale: 100, rotation: 0, opacity: 100 };
-      const defaultValue = defaults[key] || 0;
-      
-      // Validate value
-      const safeValue = this.validateNumericInput(value, min, max, defaultValue);
-      
-      // Update display
-      const displayValueEl = slider.nextElementSibling;
-      if (displayValueEl) {
-        displayValueEl.textContent = `${safeValue}${unit}`;
-      }
-      
-      // Update state
-      this.setState({
-        transform: { ...this.state.transform, [key]: safeValue * multiplier }
-      });
-      
-      // Update signature box for scale and rotation changes
-      if (key === 'scale' || key === 'rotation') {
-        this.updateSignatureBox();
-      }
-    } catch (error) {
-      console.error('Failed to update slider:', error);
-      Utils.showToast('Failed to update transform control', 'error');
+    const slider = e.target;
+    const key = slider.dataset.stateKey;
+    const value = parseFloat(slider.value);
+    const multiplier = parseFloat(slider.dataset.multiplier) || 1;
+    
+    // Update display
+    slider.nextElementSibling.textContent = `${value}${slider.dataset.unit || ''}`;
+    
+    // Update state
+    this.state.transform[key] = value * multiplier;
+    this.debouncedRender();
+    
+    if (key === 'scale' || key === 'rotation') {
+      this.updateSignatureBox();
     }
   }
 
@@ -481,32 +455,10 @@ class SignatureOverlayApp {
     });
   }
 
-  updateBackgroundColor(color) {
-    const safeColor = this.validateColorInput(color);
+  updateBackgroundSetting(key, value) {
+    const safeValue = key.includes('Color') ? this.validateColorInput(value) : value;
     this.setState({
-      backgroundSettings: { ...this.state.backgroundSettings, solidColor: safeColor }
-    });
-  }
-
-  updateGradientColor1(color) {
-    const safeColor = this.validateColorInput(color);
-    this.setState({
-      backgroundSettings: { ...this.state.backgroundSettings, gradientColor1: safeColor }
-    });
-  }
-
-  updateGradientColor2(color) {
-    const safeColor = this.validateColorInput(color);
-    this.setState({
-      backgroundSettings: { ...this.state.backgroundSettings, gradientColor2: safeColor }
-    });
-  }
-
-  updateGradientDirection(direction) {
-    const validDirections = Object.values(GRADIENT_DIRECTIONS);
-    const safeDirection = validDirections.includes(direction) ? direction : GRADIENT_DIRECTIONS.TO_BOTTOM;
-    this.setState({
-      backgroundSettings: { ...this.state.backgroundSettings, gradientDirection: safeDirection }
+      backgroundSettings: { ...this.state.backgroundSettings, [key]: safeValue }
     });
   }
 
@@ -564,18 +516,7 @@ class SignatureOverlayApp {
   }
 
   setState(updates) {
-    // Merge updates with current state
-    Object.keys(updates).forEach(key => {
-      if (typeof updates[key] === 'object' && !Array.isArray(updates[key]) && updates[key] !== null) {
-        // Deep merge for nested objects
-        this.state[key] = { ...this.state[key], ...updates[key] };
-      } else {
-        // Direct assignment for primitives and arrays
-        this.state[key] = updates[key];
-      }
-    });
-    
-    // Trigger render and save
+    Object.assign(this.state, updates);
     this.debouncedRender();
     this.debouncedSaveState();
   }
@@ -679,6 +620,19 @@ class SignatureOverlayApp {
       if (savedState) {
         const parsedState = JSON.parse(savedState);
         
+        // Sanitize strings that could contain HTML
+        if (parsedState.teamName) {
+          parsedState.teamName = parsedState.teamName.replace(/[<>"'&]/g, '');
+        }
+        
+        // Validate enums against allowed values
+        if (parsedState.teamPrefix && !TEAMS.find(t => t.prefix === parsedState.teamPrefix)) {
+          parsedState.teamPrefix = null;
+        }
+        if (parsedState.asset && !ASSET_TYPES[parsedState.asset]) {
+          parsedState.asset = null;
+        }
+        
         // Merge saved state with defaults
         this.state = { ...DEFAULT_STATE, ...parsedState };
         
@@ -730,38 +684,9 @@ class SignatureOverlayApp {
     return '#ffffff'; // Default to white
   }
 
-  // Performance monitoring
-  performanceMonitor() {
-    if (typeof performance !== 'undefined' && performance.memory) {
-      const memory = performance.memory;
-      if (memory.usedJSHeapSize > TIMING.MEMORY_WARNING_THRESHOLD) {
-        console.warn('High memory usage detected:', Utils.formatFileSize(memory.usedJSHeapSize));
-        // Consider cleanup if memory is critically high
-        if (memory.usedJSHeapSize > TIMING.MEMORY_WARNING_THRESHOLD * 2) {
-          this.performCleanup();
-        }
-      }
-    }
-  }
-
-  performCleanup() {
-    // Clear any cached images that aren't currently in use
-    if (!this.state.signature) {
-      this.canvas.clearDrawing();
-    }
-    // Force garbage collection hint
-    if (window.gc) {
-      window.gc();
-    }
-  }
 
   // Cleanup method for memory management
   cleanup() {
-    // Clear any timeouts or intervals
-    if (this.performanceInterval) {
-      clearInterval(this.performanceInterval);
-    }
-    
     // Clear canvas contexts
     if (this.canvas) {
       this.canvas.clear();
@@ -778,12 +703,6 @@ document.addEventListener('DOMContentLoaded', () => {
   try {
     window.app = new SignatureOverlayApp();
     
-    // Set up performance monitoring
-    if (typeof performance !== 'undefined') {
-      window.app.performanceInterval = setInterval(() => {
-        window.app.performanceMonitor();
-      }, 30000); // Check every 30 seconds
-    }
     
     // Set up error handling
     window.addEventListener('error', (event) => {
