@@ -135,7 +135,7 @@ export const CSS_CLASSES = {
 export const UI_TEXT = {
   DRAWING_INSTRUCTION: 'Draw your signature on the canvas below, then click "Apply Signature" when finished.',
   DRAWING_MODE_TOOLTIP: 'Click and drag to draw on the canvas',
-  SELECT_TEAM_PLACEHOLDER: 'Select a Team'
+  SELECT_TEAM_PLACEHOLDER: 'Select a Franchise'
 };
 
 // File size and dimension limits

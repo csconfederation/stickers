@@ -231,6 +231,10 @@ class SignatureOverlayApp {
     this.state.teamName = selectedOption.dataset.teamName;
     
     this.elements.assetSelect.disabled = false;
+    
+    // Automatically select and load the Sticker asset
+    this.elements.assetSelect.value = 'Sticker';
+    await this.handleAssetChange('Sticker');
   }
 
   async handleAssetChange(assetType) {
