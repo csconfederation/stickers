@@ -154,50 +154,14 @@ export const Utils = {
   sanitizeText(input) {
     const div = document.createElement('div');
     div.textContent = String(input || '');
+    return div.textContent;
+  },
+
+  // HTML encode text for safe HTML insertion
+  encodeHtml(input) {
+    const div = document.createElement('div');
+    div.textContent = String(input || '');
     return div.innerHTML;
   },
 
-  // Validate and sanitize object properties
-  sanitizeObject(obj, allowedKeys = []) {
-    if (!obj || typeof obj !== 'object') {
-      return {};
-    }
-    
-    const sanitized = {};
-    for (const key of allowedKeys) {
-      if (obj.hasOwnProperty(key)) {
-        const value = obj[key];
-        if (typeof value === 'string') {
-          sanitized[key] = this.sanitizeText(value);
-        } else if (typeof value === 'number' && !isNaN(value)) {
-          sanitized[key] = value;
-        } else if (typeof value === 'boolean') {
-          sanitized[key] = value;
-        } else if (typeof value === 'object' && value !== null) {
-          // Handle nested objects recursively (with depth limit)
-          sanitized[key] = this.sanitizeObjectShallow(value);
-        }
-      }
-    }
-    return sanitized;
-  },
-
-  // Shallow sanitization for nested objects
-  sanitizeObjectShallow(obj) {
-    if (!obj || typeof obj !== 'object') {
-      return {};
-    }
-    
-    const sanitized = {};
-    for (const [key, value] of Object.entries(obj)) {
-      if (typeof value === 'string') {
-        sanitized[key] = this.sanitizeText(value);
-      } else if (typeof value === 'number' && !isNaN(value)) {
-        sanitized[key] = value;
-      } else if (typeof value === 'boolean') {
-        sanitized[key] = value;
-      }
-    }
-    return sanitized;
-  }
 };

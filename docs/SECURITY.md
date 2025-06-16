@@ -25,6 +25,7 @@ The CSC Signature Overlay Tool implements a **client-side security model** with 
 - **Fail Secure**: Graceful degradation when security checks fail
 - **Input Validation**: All user inputs are validated and sanitized
 - **No External Dependencies**: Self-contained application reduces attack surface
+- **Recent Security Enhancements (2025)**: Fixed critical XSS vulnerabilities, enhanced input sanitization, improved error handling
 
 ### Threat Model
 Primary threats addressed:
@@ -206,15 +207,29 @@ showToast(message, type, duration) {
 ```
 
 ### Dynamic Content
-All dynamically generated content is sanitized:
+All dynamically generated content is sanitized using improved methods:
 
 ```javascript
+// Fixed sanitization method (2025 update)
 sanitizeText(input) {
   const div = document.createElement('div');
-  div.textContent = input;
-  return div.innerHTML.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  div.textContent = String(input || '');
+  return div.textContent;  // Returns safe text content
+}
+
+// HTML encoding when needed
+encodeHtml(input) {
+  const div = document.createElement('div');
+  div.textContent = String(input || '');
+  return div.innerHTML;  // Returns HTML-encoded content
 }
 ```
+
+**Security Improvements (2025):**
+- Fixed critical XSS vulnerability in error handling (replaced innerHTML with DOM creation)
+- Enhanced text sanitization methods for proper XSS protection
+- Added strict base64 validation for data URLs
+- Implemented generic error handling wrapper to reduce code duplication
 
 ## Memory Management
 

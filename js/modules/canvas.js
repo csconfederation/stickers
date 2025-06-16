@@ -101,17 +101,30 @@ export class CanvasManager {
   }
 
   // Drawing methods
-  startPath(x, y, color, size) {
+  startPath(x, y, color, size, strokeColor = null, strokeWidth = 0) {
     this.drawCtx.beginPath();
     this.drawCtx.moveTo(x, y);
     this.drawCtx.strokeStyle = color;
     this.drawCtx.lineWidth = size;
     this.currentColor = color;
     this.currentSize = size;
+    this.currentStrokeColor = strokeColor;
+    this.currentStrokeWidth = strokeWidth;
   }
 
   drawTo(x, y) {
     this.drawCtx.lineTo(x, y);
+    
+    // Draw stroke (outline) first if enabled
+    if (this.currentStrokeWidth > 0 && this.currentStrokeColor) {
+      this.drawCtx.save();
+      this.drawCtx.strokeStyle = this.currentStrokeColor;
+      this.drawCtx.lineWidth = this.currentSize + (this.currentStrokeWidth * 2);
+      this.drawCtx.stroke();
+      this.drawCtx.restore();
+    }
+    
+    // Draw main line on top
     this.drawCtx.stroke();
   }
 
@@ -119,11 +132,13 @@ export class CanvasManager {
     this.drawCtx.closePath();
   }
 
-  updateDrawSettings(color, size) {
+  updateDrawSettings(color, size, strokeColor = null, strokeWidth = 0) {
     this.drawCtx.strokeStyle = color;
     this.drawCtx.lineWidth = size;
     this.currentColor = color;
     this.currentSize = size;
+    this.currentStrokeColor = strokeColor;
+    this.currentStrokeWidth = strokeWidth;
   }
 
   renderCustomBackground(backgroundSettings) {

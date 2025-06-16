@@ -55,6 +55,17 @@
                         <label for="brushColor">Color</label>
                         <input type="color" id="brushColor" value="#000000">
                     </div>
+                    <div class="form-group">
+                        <label>Stroke Width</label>
+                        <div class="slider-group">
+                            <input type="range" id="strokeWidth" min="0" max="10" value="0">
+                            <span class="slider-value" id="strokeWidthValue">0</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="strokeColor">Stroke Color</label>
+                        <input type="color" id="strokeColor" value="#000000">
+                    </div>
                     <div class="drawing-actions">
                         <button id="clearDrawing">Clear & Start Over</button>
                         <button id="doneDrawing" class="primary apply-button">

@@ -65,6 +65,8 @@ A comprehensive guide to using the CSC Signature Overlay Tool for creating custo
   - Clear instruction text: "Draw your signature on the canvas below, then click 'Apply Signature' when finished"
   - Brush size slider (1-20 pixels)
   - Color picker for brush color
+  - Stroke width slider (0-10 pixels) - adds outline to drawn strokes
+  - Stroke color picker - color for the outline
   - Clear Drawing button
   - Apply Signature button (with checkmark icon)
 
@@ -97,9 +99,11 @@ A comprehensive guide to using the CSC Signature Overlay Tool for creating custo
 1. Click the **"Draw"** button
 2. Adjust brush size (1-20 pixels) using the slider
 3. Select brush color with the color picker
-4. The canvas cursor changes to crosshair mode
-5. The canvas border highlights to indicate drawing mode is active
-6. A floating tooltip appears to guide you through the drawing process
+4. (Optional) Set stroke width (0-10 pixels) for outline effect
+5. (Optional) Choose stroke color for the outline
+6. The canvas cursor changes to crosshair mode
+7. The canvas border highlights to indicate drawing mode is active
+8. A floating tooltip appears to guide you through the drawing process
 
 #### Drawing Techniques
 - **Smooth Lines**: Draw slowly for smoother curves
@@ -117,6 +121,9 @@ A comprehensive guide to using the CSC Signature Overlay Tool for creating custo
 - Use larger brush sizes (10-15) for bold signatures
 - Smaller brushes (3-5) work well for detailed text
 - Dark colors (black/dark blue) work well on most backgrounds
+- Add stroke outlines for better visibility on complex backgrounds
+- Use contrasting stroke colors (white stroke with black brush, or vice versa)
+- Set stroke width to 0 for no outline effect
 - Keep signatures simple for better visibility
 
 ### Uploading Signatures

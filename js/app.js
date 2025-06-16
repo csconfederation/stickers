@@ -128,6 +128,10 @@ class SignatureOverlayApp {
       (e) => this.updateBrushSize(e.target.value));
     document.getElementById('brushColor').addEventListener('change', 
       (e) => this.updateBrushColor(e.target.value));
+    document.getElementById('strokeWidth').addEventListener('input', 
+      (e) => this.updateStrokeWidth(e.target.value));
+    document.getElementById('strokeColor').addEventListener('change', 
+      (e) => this.updateStrokeColor(e.target.value));
     
     // Background controls
     document.getElementById('backgroundType').addEventListener('change', 
@@ -283,6 +287,8 @@ class SignatureOverlayApp {
   startDrawing() {
     const brushSize = parseInt(document.getElementById('brushSize').value);
     const brushColor = document.getElementById('brushColor').value;
+    const strokeWidth = parseInt(document.getElementById('strokeWidth').value);
+    const strokeColor = document.getElementById('strokeColor').value;
     
     document.getElementById('drawingTools').classList.add(CSS_CLASSES.ACTIVE);
     document.getElementById('uploadWrapper').classList.add(CSS_CLASSES.HIDDEN);
@@ -291,7 +297,7 @@ class SignatureOverlayApp {
     document.getElementById('canvasWrapper').classList.add(CSS_CLASSES.DRAWING_MODE);
     document.getElementById('drawingModeTooltip').classList.remove(CSS_CLASSES.HIDDEN);
     
-    this.signature.startDrawing(brushSize, brushColor);
+    this.signature.startDrawing(brushSize, brushColor, strokeWidth, strokeColor);
   }
 
   showUploadDialog() {
@@ -420,29 +426,60 @@ class SignatureOverlayApp {
     }
   }
 
-  updateBrushSize(value) {
+  // Generic error handler wrapper
+  handleInputError(operation, error) {
+    console.error(`Failed to ${operation}:`, error);
+    Utils.showToast(`Failed to ${operation}`, 'error');
+  }
+
+  // Generic wrapper for input operations
+  safeInputUpdate(operation, updateFn) {
     try {
-      const safeValue = this.validateNumericInput(value, DRAWING_CONFIG.minBrushSize, DRAWING_CONFIG.maxBrushSize, DRAWING_CONFIG.defaultBrushSize);
-      document.getElementById('brushSizeValue').textContent = safeValue;
-      // Always update signature manager brush settings
-      const color = document.getElementById('brushColor').value;
-      this.signature.updateBrushSettings(parseInt(safeValue), color);
+      updateFn();
     } catch (error) {
-      console.error('Failed to update brush size:', error);
-      Utils.showToast('Failed to update brush size', 'error');
+      this.handleInputError(operation, error);
     }
   }
 
+  updateBrushSize(value) {
+    this.safeInputUpdate('update brush size', () => {
+      const safeValue = this.validateNumericInput(value, DRAWING_CONFIG.minBrushSize, DRAWING_CONFIG.maxBrushSize, DRAWING_CONFIG.defaultBrushSize);
+      document.getElementById('brushSizeValue').textContent = safeValue;
+      this.updateAllBrushSettings();
+    });
+  }
+
   updateBrushColor(value) {
-    try {
-      const safeColor = this.validateColorInput(value);
-      // Always update signature manager brush settings
-      const size = document.getElementById('brushSize').value;
-      this.signature.updateBrushSettings(parseInt(size), safeColor);
-    } catch (error) {
-      console.error('Failed to update brush color:', error);
-      Utils.showToast('Failed to update brush color', 'error');
-    }
+    this.safeInputUpdate('update brush color', () => {
+      this.validateColorInput(value);
+      this.updateAllBrushSettings();
+    });
+  }
+
+  updateStrokeWidth(value) {
+    this.safeInputUpdate('update stroke width', () => {
+      const safeValue = this.validateNumericInput(value, DRAWING_CONFIG.minStrokeWidth, DRAWING_CONFIG.maxStrokeWidth, DRAWING_CONFIG.defaultStrokeWidth);
+      document.getElementById('strokeWidthValue').textContent = safeValue;
+      this.updateAllBrushSettings();
+    });
+  }
+
+  updateStrokeColor(value) {
+    this.safeInputUpdate('update stroke color', () => {
+      this.validateColorInput(value);
+      this.updateAllBrushSettings();
+    });
+  }
+
+  updateAllBrushSettings() {
+    // Get all current brush settings
+    const size = parseInt(document.getElementById('brushSize').value);
+    const color = document.getElementById('brushColor').value;
+    const strokeWidth = parseInt(document.getElementById('strokeWidth').value);
+    const strokeColor = document.getElementById('strokeColor').value;
+    
+    // Update signature manager with all settings
+    this.signature.updateBrushSettings(size, color, strokeWidth, strokeColor);
   }
 
   // Background control methods
@@ -626,7 +663,7 @@ class SignatureOverlayApp {
         
         // Sanitize strings that could contain HTML
         if (parsedState.teamName) {
-          parsedState.teamName = parsedState.teamName.replace(/[<>"'&]/g, '');
+          parsedState.teamName = Utils.sanitizeText(parsedState.teamName);
         }
         
         // Validate enums against allowed values
@@ -667,7 +704,8 @@ class SignatureOverlayApp {
 
   validateStringInput(value, maxLength = 100) {
     if (typeof value !== 'string') return '';
-    return value.substring(0, maxLength).replace(/[<>\"'&]/g, '');
+    const truncated = value.substring(0, maxLength);
+    return Utils.sanitizeText(truncated);
   }
 
   validateTeamPrefix(prefix) {
@@ -721,6 +759,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
   } catch (error) {
     console.error('Failed to initialize application:', error);
-    document.body.innerHTML = '<div style="padding: 2rem; text-align: center; color: red;">Failed to load application. Please refresh the page.</div>';
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = 'padding: 2rem; text-align: center; color: red;';
+    errorDiv.textContent = 'Failed to load application. Please refresh the page.';
+    document.body.appendChild(errorDiv);
   }
 });

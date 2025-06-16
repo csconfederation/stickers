@@ -120,7 +120,11 @@ export const DRAWING_CONFIG = {
   defaultBrushSize: 3,
   minBrushSize: 1,
   maxBrushSize: 20,
-  defaultColor: '#000000'
+  defaultColor: '#000000',
+  defaultStrokeWidth: 0,
+  minStrokeWidth: 0,
+  maxStrokeWidth: 10,
+  defaultStrokeColor: '#000000'
 };
 
 

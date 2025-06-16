@@ -8,10 +8,12 @@ export class SignatureManager {
     this.isDrawing = false;
   }
 
-  startDrawing(brushSize, brushColor) {
+  startDrawing(brushSize, brushColor, strokeWidth = 0, strokeColor = '#000000') {
     this.isDrawing = true;
     this.brushSize = brushSize;
     this.brushColor = brushColor;
+    this.strokeWidth = strokeWidth;
+    this.strokeColor = strokeColor;
     
     // Show drawing canvas
     this.canvas.drawingCanvas.classList.add('active');
@@ -20,7 +22,7 @@ export class SignatureManager {
   handleDrawStart(x, y) {
     if (!this.isDrawing) return;
     
-    this.canvas.startPath(x, y, this.brushColor, this.brushSize);
+    this.canvas.startPath(x, y, this.brushColor, this.brushSize, this.strokeColor, this.strokeWidth);
   }
 
   handleDraw(x, y) {
@@ -43,12 +45,14 @@ export class SignatureManager {
            y <= this.canvas.drawingCanvas.height;
   }
 
-  updateBrushSettings(size, color) {
+  updateBrushSettings(size, color, strokeWidth = 0, strokeColor = '#000000') {
     this.brushSize = size;
     this.brushColor = color;
+    this.strokeWidth = strokeWidth;
+    this.strokeColor = strokeColor;
     // Update canvas drawing settings if drawing is active
     if (this.isDrawing) {
-      this.canvas.updateDrawSettings(color, size);
+      this.canvas.updateDrawSettings(color, size, strokeColor, strokeWidth);
     }
   }
 
@@ -147,9 +151,19 @@ export class SignatureManager {
   validateDataUrl(dataUrl) {
     if (typeof dataUrl !== 'string') return false;
     
-    // Check format
-    const dataUrlPattern = /^data:image\/(jpeg|jpg|png|gif|webp|bmp);base64,/i;
+    // Check format with stricter base64 validation
+    const dataUrlPattern = /^data:image\/(jpeg|jpg|png|gif|webp|bmp);base64,([A-Za-z0-9+/]*={0,2})$/i;
     if (!dataUrlPattern.test(dataUrl)) return false;
+    
+    // Additional base64 validation
+    const base64Part = dataUrl.split(',')[1];
+    if (!base64Part) return false;
+    
+    try {
+      atob(base64Part);
+    } catch (e) {
+      return false;
+    }
     
     // Check size (5MB limit)
     if (dataUrl.length > 5 * 1024 * 1024) return false;

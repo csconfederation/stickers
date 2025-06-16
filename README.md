@@ -6,7 +6,7 @@ A professional web application for creating custom signature overlays on CSC (Co
 
 ### Core Functionality
 - **Multi-Asset Support**: Profile pictures, banners (Discord, Twitter, YouTube, Twitch), desktop backgrounds, and stickers
-- **Signature Tools**: Draw signatures with adjustable brush size/color or upload custom images
+- **Signature Tools**: Draw signatures with adjustable brush size/color/stroke or upload custom images
 - **Transform Controls**: Scale, rotate, move, and adjust opacity with precision controls
 - **Background Customization**: Custom backgrounds for sticker assets (solid colors, gradients, transparent)
 - **Automatic State Persistence**: Your work is automatically saved in browser storage
@@ -46,7 +46,7 @@ A professional web application for creating custom signature overlays on CSC (Co
 
 ### Usage
 1. **Select Team & Asset**: Choose a CSC team and asset type from the dropdown menus
-2. **Add Signature**: Either draw a signature or upload an image file
+2. **Add Signature**: Either draw a signature (with optional stroke outline) or upload an image file
 3. **Customize**: Use transform controls to position, scale, rotate, and adjust opacity
 4. **Background**: For sticker assets, customize the background color or gradient
 5. **Export**: Download your custom overlay as a PNG file
