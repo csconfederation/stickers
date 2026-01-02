@@ -4,11 +4,13 @@ export const TEAMS = [
   { id: '19', prefix: 'ATL', name: 'Atlantis' },
   { id: '11', prefix: 'ATO', name: 'Automata' },
   { id: '12', prefix: 'AVI', name: 'The Aviary' },
-  { id: '10', prefix: 'BS', name: 'Big Slime' },
+  { id: '9', prefix: 'BCH', name: 'The Beach' },
+  { id: '29', prefix: 'BOA', name: 'Kingsnakes' },
+  { id: '10', prefix: 'BOO', name: 'The Red Room' },
   { id: '20', prefix: 'COW', name: 'What Do You Beef' },
   { id: '0', prefix: 'CSC', name: 'CSC' }, // Original CSC team
-  { id: '29', prefix: 'dB', name: 'Dead Beats' },
   { id: '30', prefix: 'DRG', name: 'Pact of Embers' },
+  { id: '52', prefix: 'FNL', name: 'Final Girl' },
   { id: '25', prefix: 'FRG', name: 'The Toad-em Pole' },
   { id: '55', prefix: 'GF', name: "Gone Fishin'" },
   { id: '49', prefix: 'GRN', name: 'The Greenhouse' },
@@ -17,9 +19,7 @@ export const TEAMS = [
   { id: '48', prefix: 'HR', name: 'The High Rollers' },
   { id: '4', prefix: 'NAN', name: 'NAdes' },
   { id: '6', prefix: 'OS', name: 'Order of the Samurai' },
-  { id: '9', prefix: 'SAV', name: 'The Savanna' },
   { id: '54', prefix: 'TEE', name: 'The 19th Hole' },
-  { id: '52', prefix: 'TSC', name: 'The Starling Corporation' },
   { id: '14', prefix: 'UPS', name: 'Upsetti Spaghetti' },
   { id: '56', prefix: 'WIZ', name: 'Counter-Spell' }
 ].sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically by name
