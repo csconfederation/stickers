@@ -84,11 +84,13 @@ The application supports all 22 CSC franchise teams:
 | ATL | ATL | Atlantis |
 | ATO | ATO | Automata |
 | AVI | AVI | The Aviary |
-| BS | BS | Big Slime |
+| BCH | BCH | The Beach |
+| BOA | BOA | Kingsnakes |
+| BOO | BOO | The Red Room |
 | COW | COW | What Do You Beef |
 | CSC | CSC | CSC |
-| dB | dB | Dead Beats |
 | DRG | DRG | Pact of Embers |
+| FNL | FNL | Final Girl |
 | FRG | FRG | The Toad-em Pole |
 | GF | GF | Gone Fishin' |
 | GRN | GRN | The Greenhouse |
@@ -97,9 +99,7 @@ The application supports all 22 CSC franchise teams:
 | HR | HR | The High Rollers |
 | NAN | NAN | NAdes |
 | OS | OS | Order of the Samurai |
-| SAV | SAV | The Savanna |
 | TEE | TEE | The 19th Hole |
-| TSC | TSC | The Starling Corporation |
 | UPS | UPS | Upsetti Spaghetti |
 | WIZ | WIZ | Counter-Spell |
 

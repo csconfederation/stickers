@@ -14,11 +14,13 @@ teams/
 ├── ATL/              # Atlantis  
 ├── ATO/              # Automata
 ├── AVI/              # The Aviary
-├── BS/               # Big Slime
+├── BOA/              # Kingsnakes
+├── BOO/              # The Red Room
+├── BCH/              # The Beach
 ├── COW/              # What Do You Beef
 ├── CSC/              # CSC
-├── dB/               # Dead Beats
 ├── DRG/              # Pact of Embers
+├── FNL/              # Final Girl
 ├── FRG/              # The Toad-em Pole
 ├── GF/               # Gone Fishin'
 ├── GRN/              # The Greenhouse
@@ -27,9 +29,7 @@ teams/
 ├── HR/               # The High Rollers
 ├── NAN/              # NAdes
 ├── OS/               # Order of the Samurai
-├── SAV/              # The Savanna
 ├── TEE/              # The 19th Hole
-├── TSC/              # The Starling Corporation
 ├── UPS/              # Upsetti Spaghetti
 └── WIZ/              # Counter-Spell
 ```
@@ -60,11 +60,13 @@ Each team directory contains up to 8 standardized asset files:
 | 19 | ATL | Atlantis | `/teams/ATL/` |
 | 11 | ATO | Automata | `/teams/ATO/` |
 | 12 | AVI | The Aviary | `/teams/AVI/` |
-| 10 | BS | Big Slime | `/teams/BS/` |
+| 9 | BCH | The Beach | `/teams/BCH/` |
+| 29 | BOA | Kingsnakes | `/teams/BOA/` |
+| 10 | BOO | The Red Room | `/teams/BOO/` |
 | 20 | COW | What Do You Beef | `/teams/COW/` |
 | 0 | CSC | CSC | `/teams/CSC/` |
-| 29 | dB | Dead Beats | `/teams/dB/` |
 | 30 | DRG | Pact of Embers | `/teams/DRG/` |
+| 52 | FNL | Final Girl | `/teams/FNL/` |
 | 25 | FRG | The Toad-em Pole | `/teams/FRG/` |
 | 55 | GF | Gone Fishin' | `/teams/GF/` |
 | 49 | GRN | The Greenhouse | `/teams/GRN/` |
@@ -73,9 +75,7 @@ Each team directory contains up to 8 standardized asset files:
 | 48 | HR | The High Rollers | `/teams/HR/` |
 | 4 | NAN | NAdes | `/teams/NAN/` |
 | 6 | OS | Order of the Samurai | `/teams/OS/` |
-| 9 | SAV | The Savanna | `/teams/SAV/` |
 | 54 | TEE | The 19th Hole | `/teams/TEE/` |
-| 52 | TSC | The Starling Corporation | `/teams/TSC/` |
 | 14 | UPS | Upsetti Spaghetti | `/teams/UPS/` |
 | 56 | WIZ | Counter-Spell | `/teams/WIZ/` |
 
@@ -126,11 +126,13 @@ Each team directory contains up to 8 standardized asset files:
 | ATL | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | ATO | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | AVI | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| BS | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| BCH | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| BOA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| BOO | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | COW | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | CSC | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| dB | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | DRG | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| FNL | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | FRG | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | GF | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | GRN | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -139,9 +141,7 @@ Each team directory contains up to 8 standardized asset files:
 | HR | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | NAN | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | OS | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| SAV | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | TEE | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| TSC | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | UPS | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | WIZ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
