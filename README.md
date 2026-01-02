@@ -194,7 +194,7 @@ For issues or questions:
 ## 🏆 Credits
 
 - **Development**: chobits (2025)
-- **Sticker Designs**: spideY and chobits
+- **Sticker Designs**: spideY and chobits; Cameron King (2026)
 - **Team Assets**: CSC Franchise Teams
 - **Architecture**: Modular ES6 JavaScript
 
