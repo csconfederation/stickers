@@ -12,7 +12,7 @@ A professional web application for creating custom signature overlays on CSC (Co
 - **Automatic State Persistence**: Your work is automatically saved in browser storage
 
 ### Advanced Features
-- **22 Team Support**: All CSC franchise teams with official assets
+- **23 Team Support**: All CSC franchise teams with official assets including CSC Logo
 - **Real-time Preview**: Instant updates as you modify settings
 - **Keyboard Shortcuts**: Delete (remove signature), Ctrl+E (export)
 - **Toast Notifications**: User feedback for all actions
@@ -81,6 +81,7 @@ The application supports all 22 CSC franchise teams:
 | Team | Prefix | Full Name |
 |------|--------|-----------|
 | ACA | ACA | The Academics |
+| AG  | AG  | All Good |
 | ATL | ATL | Atlantis |
 | ATO | ATO | Automata |
 | AVI | AVI | The Aviary |

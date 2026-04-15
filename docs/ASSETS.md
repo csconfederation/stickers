@@ -11,6 +11,7 @@ The application supports 22 CSC franchise teams, each with standardized asset co
 ```
 teams/
 ├── ACA/              # The Academics
+├── AG/               # All Good
 ├── ATL/              # Atlantis  
 ├── ATO/              # Automata
 ├── AVI/              # The Aviary
@@ -57,6 +58,7 @@ Each team directory contains up to 8 standardized asset files:
 | ID | Prefix | Full Name | Directory |
 |----|--------|-----------|-----------|
 | 24 | ACA | The Academics | `/teams/ACA/` |
+| 50 | AG  | All Good | `/teams/AG/` |
 | 19 | ATL | Atlantis | `/teams/ATL/` |
 | 11 | ATO | Automata | `/teams/ATO/` |
 | 12 | AVI | The Aviary | `/teams/AVI/` |
@@ -80,11 +82,6 @@ Each team directory contains up to 8 standardized asset files:
 | 56 | WIZ | Counter-Spell | `/teams/WIZ/` |
 
 ### Special Cases
-
-#### Team dB (Dead Beats)
-- **Directory**: `/teams/dB/` (lowercase 'd', uppercase 'B')
-- **Prefix**: `dB` 
-- **Note**: Only team with mixed case prefix
 
 #### Team AVI (The Aviary)
 - **Missing Assets**: TwitterBanner.png, YoutubeBanner.png
@@ -123,6 +120,7 @@ Each team directory contains up to 8 standardized asset files:
 | Team | Desktop | Discord | Profile | Sticker | Shadow | Twitch | Twitter | YouTube |
 |------|---------|---------|---------|---------|--------|--------|---------|---------|
 | ACA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| AG  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | ATL | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | ATO | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | AVI | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
@@ -134,13 +132,13 @@ Each team directory contains up to 8 standardized asset files:
 | DRG | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | FNL | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | FRG | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| GF | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| GF  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | GRN | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | H4K | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| HG | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| HR | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| HG  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| HR  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | NAN | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| OS | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| OS  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | TEE | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | UPS | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | WIZ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
