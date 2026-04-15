@@ -1,6 +1,7 @@
 // Team and asset configurations with franchise IDs
 export const TEAMS = [
   { id: '24', prefix: 'ACA', name: 'The Academics' },
+  { id: '50', prefix: 'AG' , name: 'All Good'},
   { id: '19', prefix: 'ATL', name: 'Atlantis' },
   { id: '11', prefix: 'ATO', name: 'Automata' },
   { id: '12', prefix: 'AVI', name: 'The Aviary' },
