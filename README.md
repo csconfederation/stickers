@@ -67,7 +67,7 @@ stickers/
 │       ├── transform.js    # Transform controls and interactions
 │       └── utils.js        # Utility functions and helpers
 ├── teams/                  # Team asset directories (22 teams)
-│   ├── ACA/               # The Academics
+│   ├── AG/                # All Good
 │   ├── ATL/               # Atlantis
 │   ├── [...]              # Additional teams
 │   └── WIZ/               # Counter-Spell
@@ -80,7 +80,6 @@ The application supports all 22 CSC franchise teams:
 
 | Team | Prefix | Full Name |
 |------|--------|-----------|
-| ACA | ACA | The Academics |
 | AG  | AG  | All Good |
 | ATL | ATL | Atlantis |
 | ATO | ATO | Automata |
@@ -91,10 +90,11 @@ The application supports all 22 CSC franchise teams:
 | COW | COW | What Do You Beef |
 | CSC | CSC | CSC |
 | DRG | DRG | Pact of Embers |
+| FLT | FLT | The Armada |
 | FNL | FNL | Final Girl |
 | FRG | FRG | The Toad-em Pole |
 | GF | GF | Gone Fishin' |
-| GRN | GRN | The Greenhouse |
+| JDM | JDM | Midnight Club |
 | H4K | H4K | H4ck3r H4v3n |
 | HG | HG | Headhunter's Guild |
 | HR | HR | The High Rollers |

@@ -10,7 +10,6 @@ The application supports 22 CSC franchise teams, each with standardized asset co
 
 ```
 teams/
-├── ACA/              # The Academics
 ├── AG/               # All Good
 ├── ATL/              # Atlantis  
 ├── ATO/              # Automata
@@ -21,10 +20,11 @@ teams/
 ├── COW/              # What Do You Beef
 ├── CSC/              # CSC
 ├── DRG/              # Pact of Embers
+├── FLT/              # The Armada
 ├── FNL/              # Final Girl
 ├── FRG/              # The Toad-em Pole
 ├── GF/               # Gone Fishin'
-├── GRN/              # The Greenhouse
+├── JDM/              # Midnight Club
 ├── H4K/              # H4ck3r H4v3n
 ├── HG/               # Headhunter's Guild
 ├── HR/               # The High Rollers
@@ -57,7 +57,6 @@ Each team directory contains up to 8 standardized asset files:
 
 | ID | Prefix | Full Name | Directory |
 |----|--------|-----------|-----------|
-| 24 | ACA | The Academics | `/teams/ACA/` |
 | 50 | AG  | All Good | `/teams/AG/` |
 | 19 | ATL | Atlantis | `/teams/ATL/` |
 | 11 | ATO | Automata | `/teams/ATO/` |
@@ -68,10 +67,11 @@ Each team directory contains up to 8 standardized asset files:
 | 20 | COW | What Do You Beef | `/teams/COW/` |
 | 0 | CSC | CSC | `/teams/CSC/` |
 | 30 | DRG | Pact of Embers | `/teams/DRG/` |
+| 62 | FLT | The Armarda | `/teams/FLT/` |
 | 52 | FNL | Final Girl | `/teams/FNL/` |
 | 25 | FRG | The Toad-em Pole | `/teams/FRG/` |
 | 55 | GF | Gone Fishin' | `/teams/GF/` |
-| 49 | GRN | The Greenhouse | `/teams/GRN/` |
+| 63 | JDM | Midnight Club | `/teams/JDM/` |
 | 13 | H4K | H4ck3r H4v3n | `/teams/H4K/` |
 | 3 | HG | Headhunter's Guild | `/teams/HG/` |
 | 48 | HR | The High Rollers | `/teams/HR/` |
@@ -119,7 +119,6 @@ Each team directory contains up to 8 standardized asset files:
 
 | Team | Desktop | Discord | Profile | Sticker | Shadow | Twitch | Twitter | YouTube |
 |------|---------|---------|---------|---------|--------|--------|---------|---------|
-| ACA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | AG  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | ATL | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | ATO | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -130,10 +129,11 @@ Each team directory contains up to 8 standardized asset files:
 | COW | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | CSC | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | DRG | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| FLT | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ |
 | FNL | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | FRG | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | GF  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| GRN | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| JDM | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | H4K | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | HG  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 | HR  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |

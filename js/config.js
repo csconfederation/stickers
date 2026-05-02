@@ -1,7 +1,7 @@
 // Team and asset configurations with franchise IDs
 export const TEAMS = [
-  { id: '24', prefix: 'ACA', name: 'The Academics' },
   { id: '50', prefix: 'AG' , name: 'All Good'},
+  { id: '62', prefix: 'FLT', name: 'Armada'},
   { id: '19', prefix: 'ATL', name: 'Atlantis' },
   { id: '11', prefix: 'ATO', name: 'Automata' },
   { id: '12', prefix: 'AVI', name: 'The Aviary' },
@@ -14,10 +14,10 @@ export const TEAMS = [
   { id: '52', prefix: 'FNL', name: 'Final Girl' },
   { id: '25', prefix: 'FRG', name: 'The Toad-em Pole' },
   { id: '55', prefix: 'GF', name: "Gone Fishin'" },
-  { id: '49', prefix: 'GRN', name: 'The Greenhouse' },
   { id: '13', prefix: 'H4K', name: 'H4ck3r H4v3n' },
   { id: '3', prefix: 'HG', name: "Headhunter's Guild" },
   { id: '48', prefix: 'HR', name: 'The High Rollers' },
+  { id: '63', prefix: 'JDM', name: 'Midnight Club'},
   { id: '4', prefix: 'NAN', name: 'NAdes' },
   { id: '6', prefix: 'OS', name: 'Order of the Samurai' },
   { id: '54', prefix: 'TEE', name: 'The 19th Hole' },
