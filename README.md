@@ -82,11 +82,12 @@ The application supports all 22 CSC franchise teams:
 |------|--------|-----------|
 | AG  | AG  | All Good |
 | ATL | ATL | Atlantis |
-| ATO | ATO | Automata |
 | AVI | AVI | The Aviary |
 | BCH | BCH | The Beach |
 | BOA | BOA | Kingsnakes |
-| BOO | BOO | The Red Room |
+| BS | BS | Big Slime |
+| MYT | MYT | The Acheron |
+| COS | COS | Cosmic |
 | COW | COW | What Do You Beef |
 | CSC | CSC | CSC |
 | DRG | DRG | Pact of Embers |
@@ -97,7 +98,8 @@ The application supports all 22 CSC franchise teams:
 | JDM | JDM | Midnight Club |
 | H4K | H4K | H4ck3r H4v3n |
 | HG | HG | Headhunter's Guild |
-| HR | HR | The High Rollers |
+| JDM | JDM | Midnight Club |
+| MYT | MYT | The Acheron |
 | NAN | NAN | NAdes |
 | OS | OS | Order of the Samurai |
 | TEE | TEE | The 19th Hole |
@@ -118,6 +120,7 @@ Each team includes the following asset types:
 | Desktop Background | 1920×1080 | Full HD wallpaper |
 | Sticker | 512×512 | Square sticker design |
 | Sticker Shadow | 512×512 | Sticker with shadow effect |
+| Season Sticker | 512x512 | Special seasonal sticker, brought to you by Skimix |
 
 ## 🔧 Technical Details
 
@@ -195,7 +198,7 @@ For issues or questions:
 ## 🏆 Credits
 
 - **Development**: chobits (2025)
-- **Sticker Designs**: spideY and chobits; Cameron King (2026)
+- **Sticker Designs**: spideY and chobits; Cameron King and Skimix (2026) 
 - **Team Assets**: CSC Franchise Teams
 - **Architecture**: Modular ES6 JavaScript
 

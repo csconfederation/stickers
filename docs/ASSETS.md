@@ -12,11 +12,11 @@ The application supports 22 CSC franchise teams, each with standardized asset co
 teams/
 ├── AG/               # All Good
 ├── ATL/              # Atlantis  
-├── ATO/              # Automata
 ├── AVI/              # The Aviary
 ├── BOA/              # Kingsnakes
-├── BOO/              # The Red Room
 ├── BCH/              # The Beach
+├── BS/               # Big Slime
+├── COS/              # Cosmic
 ├── COW/              # What Do You Beef
 ├── CSC/              # CSC
 ├── DRG/              # Pact of Embers
@@ -27,7 +27,7 @@ teams/
 ├── JDM/              # Midnight Club
 ├── H4K/              # H4ck3r H4v3n
 ├── HG/               # Headhunter's Guild
-├── HR/               # The High Rollers
+├── MYT/              # The Archeron
 ├── NAN/              # NAdes
 ├── OS/               # Order of the Samurai
 ├── TEE/              # The 19th Hole
@@ -37,7 +37,7 @@ teams/
 
 ## Asset Types
 
-Each team directory contains up to 8 standardized asset files:
+Each team directory contains up to 10 standardized asset files:
 
 ### Core Assets (All Teams)
 - `DesktopBackground.png` - 1920×1080 desktop wallpaper
@@ -51,6 +51,10 @@ Each team directory contains up to 8 standardized asset files:
 - `TwitterBanner.png` - 1500×500 Twitter/X header image
 - `YoutubeBanner.png` - 2560×1440 YouTube channel art
 
+### Special Assets (All Teams)
+- `SeasonTeamSticker` - 512x512 special seasonal sticker
+- `SeasonSignatureSticker` - 512x512 seasonal sticker for signatures
+
 ## Team Details
 
 ### Complete Team List
@@ -59,11 +63,11 @@ Each team directory contains up to 8 standardized asset files:
 |----|--------|-----------|-----------|
 | 50 | AG  | All Good | `/teams/AG/` |
 | 19 | ATL | Atlantis | `/teams/ATL/` |
-| 11 | ATO | Automata | `/teams/ATO/` |
 | 12 | AVI | The Aviary | `/teams/AVI/` |
-| 9 | BCH | The Beach | `/teams/BCH/` |
-| 29 | BOA | Kingsnakes | `/teams/BOA/` |
-| 10 | BOO | The Red Room | `/teams/BOO/` |
+| 61 | BCH | The Beach | `/teams/BCH/` |
+| 59 | BOA | Kingsnakes | `/teams/BOA/` |
+| 10 | BS | Big Slime | `/teams/BS/` |
+| 65 | COS | Cosmic | `/teams/COS/` |
 | 20 | COW | What Do You Beef | `/teams/COW/` |
 | 0 | CSC | CSC | `/teams/CSC/` |
 | 30 | DRG | Pact of Embers | `/teams/DRG/` |
@@ -74,7 +78,7 @@ Each team directory contains up to 8 standardized asset files:
 | 63 | JDM | Midnight Club | `/teams/JDM/` |
 | 13 | H4K | H4ck3r H4v3n | `/teams/H4K/` |
 | 3 | HG | Headhunter's Guild | `/teams/HG/` |
-| 48 | HR | The High Rollers | `/teams/HR/` |
+| 64 | MYT | The Acheron | `/teams/MYT/` |
 | 4 | NAN | NAdes | `/teams/NAN/` |
 | 6 | OS | Order of the Samurai | `/teams/OS/` |
 | 54 | TEE | The 19th Hole | `/teams/TEE/` |
@@ -101,6 +105,8 @@ Each team directory contains up to 8 standardized asset files:
 | TwitchBanner | 1920×480 | PNG | Twitch channel banners |
 | TwitterBanner | 1500×500 | PNG | Twitter/X headers |
 | YoutubeBanner | 2560×1440 | PNG | YouTube channel art |
+| SeasonTeamSticker | 512x512 | PNG | Seaonal Team Sticker |
+| SeasonnsignatureSticker | 512x512 | PNG | Signature sticker with slightly more transparency on Franchise Logo | 
 
 ### File Naming Conventions
 - **Exact Match Required**: File names must match exactly (case-sensitive)
@@ -117,31 +123,31 @@ Each team directory contains up to 8 standardized asset files:
 
 ## Asset Availability Matrix
 
-| Team | Desktop | Discord | Profile | Sticker | Shadow | Twitch | Twitter | YouTube |
-|------|---------|---------|---------|---------|--------|--------|---------|---------|
-| AG  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| ATL | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| ATO | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| AVI | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ |
-| BCH | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| BOA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| BOO | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| COW | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| CSC | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| DRG | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| FLT | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ |
-| FNL | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| FRG | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| GF  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| JDM | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| H4K | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| HG  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| HR  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| NAN | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| OS  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| TEE | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| UPS | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| WIZ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Team | Desktop | Discord | Profile | Sticker | Shadow | Twitch | Twitter | YouTube | Season Sticker | Season Signature |
+|------|---------|---------|---------|---------|--------|--------|---------|---------|----------------|------------------|
+| AG  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ATL | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ATO | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| AVI | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ | ✅ |
+| BCH | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| BOA | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| BOO | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| COW | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| CSC | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | 
+| DRG | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| FLT | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| FNL | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| FRG | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| GF  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| JDM | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| H4K | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| HG  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| HR  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| NAN | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| OS  | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| TEE | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| UPS | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| WIZ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 **Summary:**
 - **Complete Asset Sets**: 21 teams have all 8 asset types

@@ -1,24 +1,24 @@
 // Team and asset configurations with franchise IDs
 export const TEAMS = [
   { id: '50', prefix: 'AG' , name: 'All Good'},
-  { id: '62', prefix: 'FLT', name: 'Armada'},
   { id: '19', prefix: 'ATL', name: 'Atlantis' },
-  { id: '11', prefix: 'ATO', name: 'Automata' },
   { id: '12', prefix: 'AVI', name: 'The Aviary' },
+  { id: '65', prefix: 'COS', name: 'Cosmic' },
   { id: '9', prefix: 'BCH', name: 'The Beach' },
   { id: '29', prefix: 'BOA', name: 'Kingsnakes' },
-  { id: '10', prefix: 'BOO', name: 'The Red Room' },
+  { id: '10', prefix: 'BS', name: 'Big Slime' },
   { id: '20', prefix: 'COW', name: 'What Do You Beef' },
   { id: '0', prefix: 'CSC', name: 'CSC' }, // Original CSC team
   { id: '30', prefix: 'DRG', name: 'Pact of Embers' },
+  { id: '62', prefix: 'FLT', name: 'Armada'},
   { id: '52', prefix: 'FNL', name: 'Final Girl' },
   { id: '25', prefix: 'FRG', name: 'The Toad-em Pole' },
   { id: '55', prefix: 'GF', name: "Gone Fishin'" },
   { id: '13', prefix: 'H4K', name: 'H4ck3r H4v3n' },
   { id: '3', prefix: 'HG', name: "Headhunter's Guild" },
-  { id: '48', prefix: 'HR', name: 'The High Rollers' },
   { id: '63', prefix: 'JDM', name: 'Midnight Club'},
   { id: '4', prefix: 'NAN', name: 'NAdes' },
+  { id: '64', prefix: 'MYT', name: 'The Acheron' },
   { id: '6', prefix: 'OS', name: 'Order of the Samurai' },
   { id: '54', prefix: 'TEE', name: 'The 19th Hole' },
   { id: '14', prefix: 'UPS', name: 'Upsetti Spaghetti' },
@@ -73,6 +73,18 @@ export const ASSET_TYPES = {
     height: 512, 
     displayName: 'Sticker Shadow',
     filename: 'Sticker Shadow.png'
+  },
+  SeasonTeamSticker: {
+    width: 512,
+    height: 512,
+    displayName: 'Season Team Sticker',
+    filename: 'SeasonTeamSticker.png'
+  },
+  SeasonSignatureSticker: {
+    width: 512,
+    height: 512,
+    displayName: 'Season Signature Sticker',
+    filename: 'SeasonSignatureSticker.png'
   }
 };
 
