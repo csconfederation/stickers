@@ -84,8 +84,6 @@ class App {
     $('exportBtn').addEventListener('click', () => this.exportImage());
   }
 
-  // ---- Background -------------------------------------------------------
-
   // Applies saved settings, then loads the saved asset once.
   async restore() {
     const saved = loadSavedState();
@@ -148,8 +146,6 @@ class App {
     this.canvas.setDimensions(width, height);
     this.pad.resize(width, height);
   }
-
-  // ---- Signature: drawing and upload ------------------------------------
 
   startDrawing() {
     this.drawing = true;
@@ -251,8 +247,6 @@ class App {
     this.syncSignature();
     this.render();
   }
-
-  // ---- Signature: transform and selection -------------------------------
 
   setTransform(change) {
     this.state.transform = normalizeTransform({ ...this.state.transform, ...change }, this.canvas.size);
@@ -371,8 +365,6 @@ class App {
       this.deleteSignature();
     }
   }
-
-  // ---- Rendering, controls and export -----------------------------------
 
   render() {
     this.canvas.render(this.state);

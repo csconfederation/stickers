@@ -75,7 +75,8 @@ body {
   padding: 2rem;
   position: relative;
   user-select: none;
-  /* Its size no longer depends on the canvas, so the wrapper can fit to it. */
+  /* Size containment keeps this area independent of its content, so the
+     wrapper's cq units can fit the canvas to it without a feedback loop. */
   container-type: size;
 }
 
