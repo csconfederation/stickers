@@ -22,3 +22,6 @@ node_modules/
 # Temporary files
 *.tmp
 *.temp
+# Playwright
+test-results/
+playwright-report/
