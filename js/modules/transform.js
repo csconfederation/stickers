@@ -1,11 +1,10 @@
-// Pure geometry for the signature. A transform is { x, y, scale, rotation,
-// opacity } where x/y is the signature's center in canvas pixels and rotation
-// is in degrees. A source is anything with width and height (image or canvas).
+// Pure geometry for a layer on one asset. A placement is { x, y, scale,
+// rotation, opacity } where x/y is the layer's center in asset pixels and
+// rotation is in degrees. A size is anything with width and height.
 import { SCALE_LIMITS } from '../config.js';
 import { clamp } from './utils.js';
 
 const SNAP_STEP = 15;
-const FIT_RATIO = 0.8;
 
 export const clampScale = (scale) => clamp(scale, SCALE_LIMITS.min, SCALE_LIMITS.max);
 
@@ -25,12 +24,6 @@ export function normalizeTransform(t, canvas) {
   };
 }
 
-// Centered, shrunk only as needed to fit within 80% of the canvas.
-export function centeredTransform(source, canvas) {
-  const fit = Math.min(1, FIT_RATIO * canvas.width / source.width, FIT_RATIO * canvas.height / source.height);
-  return { x: canvas.width / 2, y: canvas.height / 2, scale: clampScale(fit), rotation: 0, opacity: 1 };
-}
-
 // Maps a canvas point into the signature's unrotated frame, origin at its center.
 export function toLocal(point, t) {
   const angle = -t.rotation * Math.PI / 180;
@@ -42,9 +35,9 @@ export function toLocal(point, t) {
   };
 }
 
-export function hitTest(point, t, source) {
+export function hitTest(point, t, size) {
   const local = toLocal(point, t);
-  return Math.abs(local.x) <= source.width * t.scale / 2 && Math.abs(local.y) <= source.height * t.scale / 2;
+  return Math.abs(local.x) <= size.width * t.scale / 2 && Math.abs(local.y) <= size.height * t.scale / 2;
 }
 
 // The gesture functions take the transform and pointer position at gesture
@@ -68,9 +61,9 @@ export function rotateTo(start, startPoint, point, snap = false) {
 }
 
 // Selection box as percentages of the canvas, so it follows the displayed scale.
-export function boxStyle(t, source, canvas) {
-  const width = source.width * t.scale;
-  const height = source.height * t.scale;
+export function boxStyle(t, size, canvas) {
+  const width = size.width * t.scale;
+  const height = size.height * t.scale;
   return {
     left: (t.x - width / 2) / canvas.width * 100,
     top: (t.y - height / 2) / canvas.height * 100,

@@ -5,15 +5,15 @@ import { createState, parseSavedState, serializeState } from '../../js/modules/s
 describe('createState', () => {
   test('does not share nested objects with the defaults', () => {
     const state = createState();
-    state.transform.scale = 3;
+    state.layers.push({ id: 'x' });
     state.backgroundSettings.type = 'solid';
-    expect(DEFAULT_STATE.transform.scale).toBe(1);
+    expect(DEFAULT_STATE.layers).toEqual([]);
     expect(DEFAULT_STATE.backgroundSettings.type).toBe('original');
-    expect(createState().transform.scale).toBe(1);
+    expect(createState().backgroundSettings.type).toBe('original');
   });
 
   test('each call returns a fresh state', () => {
-    expect(createState().transform).not.toBe(createState().transform);
+    expect(createState().layers).not.toBe(createState().layers);
   });
 });
 
@@ -66,11 +66,12 @@ describe('parseSavedState', () => {
   });
 });
 
-test('serializeState saves team, asset and background only', () => {
+test('serializeState saves team, asset and background only (no layers)', () => {
   const state = createState();
   state.teamPrefix = 'AG';
   state.asset = 'Sticker';
-  state.transform.x = 99;
+  state.layers.push({ id: 'layer-1', kind: 'text', placements: { Sticker: { x: 99 } } });
+  state.selectedId = 'layer-1';
   expect(JSON.parse(serializeState(state))).toEqual({
     teamPrefix: 'AG', asset: 'Sticker', backgroundSettings: state.backgroundSettings
   });

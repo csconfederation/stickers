@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { SCALE_LIMITS } from '../../js/config.js';
 import {
-  boxStyle, centeredTransform, clampScale, dragTo, hitTest, normalizeAngle, normalizeTransform, resizeTo, rotateTo
+  boxStyle, clampScale, dragTo, hitTest, normalizeAngle, normalizeTransform, resizeTo, rotateTo
 } from '../../js/modules/transform.js';
 
 const sig = { width: 100, height: 40 };
@@ -103,25 +103,6 @@ describe('limits and normalizing', () => {
   test('normalizeTransform clamps every field', () => {
     const t = normalizeTransform({ x: -5, y: 9999, scale: 12, rotation: 365, opacity: 3 }, { width: 512, height: 300 });
     expect(t).toEqual({ x: 0, y: 300, scale: 5, rotation: 5, opacity: 1 });
-  });
-});
-
-describe('centeredTransform', () => {
-  const canvas = { width: 512, height: 512 };
-
-  test('small images stay at 100% in the center', () => {
-    expect(centeredTransform({ width: 200, height: 100 }, canvas)).toEqual({ x: 256, y: 256, scale: 1, rotation: 0, opacity: 1 });
-  });
-
-  test('shrinks to fit within 80% of the canvas', () => {
-    const t = centeredTransform({ width: 1024, height: 256 }, canvas);
-    expect(t.scale).toBeCloseTo(0.4);
-    const t2 = centeredTransform({ width: 256, height: 2048 }, canvas);
-    expect(t2.scale).toBeCloseTo(0.2);
-  });
-
-  test('never goes below the minimum scale', () => {
-    expect(centeredTransform({ width: 20000, height: 20000 }, canvas).scale).toBe(SCALE_LIMITS.min);
   });
 });
 

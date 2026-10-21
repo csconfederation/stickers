@@ -56,15 +56,13 @@ export const GRADIENT_DIRECTIONS = {
 };
 
 // Never mutate this; build state with createState() (js/modules/state.js).
-// transform.x/y is the signature's center in canvas pixels.
+// layers is [{ id, kind, ..., placements }]; see js/modules/layers.js.
 export const DEFAULT_STATE = {
   teamPrefix: null,
   asset: null,
   backgroundImage: null,
-  signature: null,
-  selected: false,
-  transform: { x: 0, y: 0, scale: 1, rotation: 0, opacity: 1 },
-  initialTransform: null,
+  layers: [],
+  selectedId: null,
   backgroundSettings: {
     type: BACKGROUND_TYPES.ORIGINAL,
     solidColor: '#ffffff',
