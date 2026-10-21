@@ -23,7 +23,7 @@ const TEXT_INPUTS = { textInput: 'text', textColor: 'color', textOutlineColor: '
 
 // A drawn signature is shared by every asset, so the pad is sharp enough for
 // the widest one at its default size.
-const PAD_MIN_BITMAP_WIDTH = PLACEMENT.signatureMaxWidth * Math.max(...Object.values(ASSET_TYPES).map((a) => a.width));
+const PAD_SHARED_BITMAP_WIDTH = PLACEMENT.signatureMaxWidth * Math.max(...Object.values(ASSET_TYPES).map((a) => a.width));
 
 // Resolves once the layers' fonts are loaded; a missing font falls back instead of blocking.
 const loadFonts = (layers) => Promise.all(
@@ -181,7 +181,9 @@ class App extends EventTarget {
     }
     if (id !== this.requestId) return;
     if (prefix !== this.state.teamPrefix) {
-      clearPlacements(this.state.layers); // placements are per team; the layers stay
+      // Placements belong to a team's assets; the layers stay. Picking the first team keeps
+      // what was drawn on the blank stage.
+      if (this.state.teamPrefix) clearPlacements(this.state.layers);
       this.thumbs.clear();
     }
     Object.assign(this.state, { teamPrefix: prefix, asset, backgroundImage: image });
@@ -222,7 +224,9 @@ class App extends EventTarget {
   syncPad() {
     const { width, height } = $('drawingCanvas').getBoundingClientRect();
     if (!width || !height) return;
-    this.pad.resize(width, height, padPixelRatio(width, height, devicePixelRatio, PAD_MIN_BITMAP_WIDTH));
+    // At least the stage's own pixel width too, so it isn't upscaled on the asset it was drawn on.
+    const minWidth = Math.max(PAD_SHARED_BITMAP_WIDTH, this.assetSize.width);
+    this.pad.resize(width, height, padPixelRatio(width, height, devicePixelRatio, minWidth));
   }
 
   readBrush() {
@@ -305,16 +309,13 @@ class App extends EventTarget {
   }
 
   // Edits the selected text layer; with none selected the controls just set the next one's defaults.
-  editText(change) {
+  async editText(change) {
     const layer = this.selected;
     if (layer?.kind !== 'text') return;
     Object.assign(layer, change);
+    if ('text' in change) await loadFonts([layer]); // new characters may need another font subset
     this.syncLayer();
     this.render();
-    loadFonts([layer]).then(() => {
-      this.syncLayer();
-      this.render();
-    });
   }
 
   select(id) {
