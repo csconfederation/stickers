@@ -1,7 +1,8 @@
 import path from 'node:path'
 import { defineConfig, devices } from '@playwright/test'
 
-const PORT = 4312
+// Another session may already hold 4312; override with E2E_PORT.
+const PORT = Number(process.env.E2E_PORT ?? 4312)
 const BASE_URL = `http://127.0.0.1:${PORT}`
 // Serve another checkout of the app (e.g. a refactor worktree) with the same tests.
 const APP_DIR = path.resolve(process.env.APP_DIR ?? import.meta.dirname)

@@ -76,6 +76,9 @@ test.describe('1. assets', () => {
       soft(first.error, `${team}: selecting the team (auto-loads Sticker) raised "${first.message}"`).toBe(false)
       await soft.poll(() => canvasSize(page), { message: `${team}: Sticker canvas size`, timeout: 2_000 }).toEqual([512, 512])
 
+      const offered = await page.locator('#assetSelect option').evaluateAll((os) => os.map((o) => o.value).filter(Boolean))
+      soft(offered.filter((v) => !(v in ASSETS)), `${team}: asset options this suite does not know about`).toEqual([])
+
       for (const [key, spec] of Object.entries(ASSETS)) {
         const option = page.locator(`#assetSelect option[value="${key}"]`)
         const optionCount = await option.count()
