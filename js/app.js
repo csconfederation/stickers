@@ -2,10 +2,10 @@ import { TEAMS, ASSET_TYPES, BACKGROUND_TYPES, DEFAULT_ASSET, SCALE_LIMITS } fro
 import { CanvasManager, renderComposite } from './modules/canvas.js';
 import { DrawingPad, padPixelRatio } from './modules/pad.js';
 import { padPlacement, validateUpload } from './modules/signature.js';
-import { boxStyle, dragTo, resizeTo, rotateTo } from './modules/transform.js';
+import { boxStyle, dragTo, normalizeTransform, resizeTo, rotateTo } from './modules/transform.js';
 import {
   PLACEMENT, clearPlacements, createSignatureLayer, createTextLayer, editPlacement, layerSize,
-  manualPlacement, measureWith, resolvePlacements, topLayerAt
+  measureWith, resolvePlacements, topLayerAt
 } from './modules/layers.js';
 import { createState, loadSavedState, saveState } from './modules/state.js';
 import { assetLabel, assetUrl, availability, loadManifest, manifestTeams, pickAsset, thumbUrl } from './modules/assets.js';
@@ -101,6 +101,7 @@ class App extends EventTarget {
     $('fileInput').addEventListener('change', (e) => this.handleUpload(e));
 
     $('clearDrawing').addEventListener('click', () => this.pad.clear());
+    $('undoStroke').addEventListener('click', () => this.pad.undo());
     $('doneDrawing').addEventListener('click', () => this.applyDrawing());
     for (const id of ['brushSize', 'strokeWidth']) {
       $(id).addEventListener('input', (e) => { $(`${id}Value`).textContent = e.target.value; });
@@ -170,6 +171,7 @@ class App extends EventTarget {
   }
 
   async showBackground(prefix, asset, available, id) {
+    delete $('mainCanvas').dataset.asset;
     let image;
     try {
       image = await loadImage(assetUrl(prefix, asset));
@@ -177,6 +179,7 @@ class App extends EventTarget {
       if (id !== this.requestId) return;
       showToast('Failed to load the background image.');
       this.syncControls();
+      this.syncStageAsset();
       return;
     }
     if (id !== this.requestId) return;
@@ -245,9 +248,9 @@ class App extends EventTarget {
       return;
     }
     this.stopDrawing();
-    // Drawn over the stage, so it lands where it was drawn on this asset only.
+    // Drawn over the stage, so it starts where it was drawn on this asset; every other asset uses the default.
     const layer = createSignatureLayer(capture.image);
-    layer.placements[this.assetKey] = manualPlacement(padPlacement(capture, this.assetSize), this.assetSize);
+    layer.origins[this.assetKey] = normalizeTransform(padPlacement(capture, this.assetSize), this.assetSize);
     this.addLayer(layer);
   }
 
@@ -341,7 +344,7 @@ class App extends EventTarget {
     this.render();
   }
 
-  // Drops the manual placement so the asset falls back to its default.
+  // Drops the manual placement so the asset falls back to where the signature was drawn, or its default.
   resetPlacement() {
     const layer = this.selected;
     if (!layer) return;
@@ -476,11 +479,21 @@ class App extends EventTarget {
 
   // ---- Rendering, controls and export -----------------------------------
 
+  // Everything renderComposite needs to draw an asset, over the given image.
+  scene(assetKey, image) {
+    const { width, height } = ASSET_TYPES[assetKey];
+    return {
+      image,
+      assetSize: { width, height },
+      backgroundSettings: this.state.backgroundSettings,
+      customBackground: Boolean(ASSET_TYPES[assetKey].customBackground),
+      layers: this.state.layers,
+      assetKey
+    };
+  }
+
   render() {
-    const { backgroundImage, backgroundSettings, layers } = this.state;
-    this.canvas.render({
-      background: backgroundImage, backgroundSettings, layers, assetKey: this.assetKey, assetSize: this.assetSize
-    });
+    this.canvas.render(this.scene(this.assetKey, this.state.backgroundImage));
     this.dispatchEvent(new Event('change'));
   }
 
@@ -489,6 +502,16 @@ class App extends EventTarget {
     this.render();
     saveState(this.state);
     this.syncControls();
+    this.syncStageAsset();
+  }
+
+  // Test hook: #mainCanvas[data-asset] is "<PREFIX>/<AssetKey>" once that asset's
+  // background is on the stage, and absent while one is loading or none is chosen.
+  syncStageAsset() {
+    const { teamPrefix, asset, backgroundImage } = this.state;
+    const dataset = $('mainCanvas').dataset;
+    if (teamPrefix && asset && backgroundImage) dataset.asset = `${teamPrefix}/${asset}`;
+    else delete dataset.asset;
   }
 
   syncControls() {
@@ -519,31 +542,32 @@ class App extends EventTarget {
 
   // ---- Kit: every asset of the team, signed ------------------------------
 
-  // PNG blob of one asset at its export size, with every layer on it.
+  // PNG blob of one asset at its export size, with every layer on it. Loads the
+  // asset's full-size image unless it is the one on the stage.
   async exportAsset(assetKey) {
-    const { teamPrefix, backgroundSettings, layers } = this.state;
+    const { teamPrefix, layers } = this.state;
     if (!teamPrefix) return null;
-    const [background] = await Promise.all([
+    const [image] = await Promise.all([
       assetKey === this.state.asset ? this.state.backgroundImage : loadImage(assetUrl(teamPrefix, assetKey)),
       loadFonts(layers)
     ]);
-    const assetSize = { width: ASSET_TYPES[assetKey].width, height: ASSET_TYPES[assetKey].height };
+    const scene = this.scene(assetKey, image);
     const canvas = document.createElement('canvas');
-    Object.assign(canvas, assetSize);
-    renderComposite(canvas.getContext('2d'), { background, backgroundSettings, layers, assetKey, assetSize });
+    Object.assign(canvas, scene.assetSize);
+    renderComposite(canvas.getContext('2d'), scene);
     return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
   }
 
-  // Draws an asset's thumbnail with the layers on top, scaled to fit the canvas width.
-  async drawKitThumb(assetKey, canvas) {
-    const { teamPrefix, backgroundSettings, layers } = this.state;
-    if (!teamPrefix) return;
-    if (!this.thumbs.has(assetKey)) this.thumbs.set(assetKey, loadImage(thumbUrl(teamPrefix, assetKey)));
-    const [background] = await Promise.all([this.thumbs.get(assetKey), loadFonts(layers)]);
-    const assetSize = { width: ASSET_TYPES[assetKey].width, height: ASSET_TYPES[assetKey].height };
-    renderComposite(canvas.getContext('2d'), {
-      background, backgroundSettings, layers, assetKey, assetSize, scale: canvas.width / assetSize.width
-    });
+  // Draws an asset's thumbnail with the layers on top, scaled to the canvas width.
+  // Size the canvas to the asset's aspect ratio first.
+  async renderThumb(canvas, assetKey) {
+    const prefix = this.state.teamPrefix;
+    if (!prefix) return;
+    if (!this.thumbs.has(assetKey)) this.thumbs.set(assetKey, loadImage(thumbUrl(prefix, assetKey)));
+    const [image] = await Promise.all([this.thumbs.get(assetKey), loadFonts(this.state.layers)]);
+    if (prefix !== this.state.teamPrefix) return; // the team changed while this loaded
+    const scene = this.scene(assetKey, image);
+    renderComposite(canvas.getContext('2d'), { ...scene, scale: canvas.width / scene.assetSize.width });
   }
 
   async exportImage() {
