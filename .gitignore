@@ -22,3 +22,6 @@ node_modules/
 # Temporary files
 *.tmp
 *.temp
+# Generated at deploy time (manifest and thumbnails)
+teams/manifest.json
+teams/*/thumbs/
