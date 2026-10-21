@@ -1,4 +1,4 @@
-import { ASSET_TYPES, BACKGROUND_TYPES, GRADIENT_DIRECTIONS } from '../config.js';
+import { BACKGROUND_TYPES, GRADIENT_DIRECTIONS } from '../config.js';
 import { layerSize, measureWith, resolvePlacements, textFont } from './layers.js';
 import { pointerToCanvas } from './utils.js';
 
@@ -50,19 +50,19 @@ function drawLayer(ctx, layer, placement, size) {
   ctx.restore();
 }
 
-// Draws one asset: background (with the custom backdrop where allowed), then
-// every layer in order. assetSize is the export size; scale shrinks the whole
-// thing (1 for the stage and export, less for kit thumbnails, where background
-// is the thumbnail image).
-export function renderComposite(ctx, { background, backgroundSettings, layers, assetKey, assetSize, scale = 1 }) {
+// Draws one asset: its image (over the custom backdrop where customBackground
+// allows one), then every layer in order. assetSize is the export size; scale
+// shrinks the whole thing (1 for the stage and export, less for kit thumbnails,
+// where image is the thumbnail).
+export function renderComposite(ctx, { image, assetSize, backgroundSettings, customBackground, layers, assetKey, scale = 1 }) {
   const { width, height } = assetSize;
   ctx.save();
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   ctx.clearRect(0, 0, width, height);
   ctx.imageSmoothingQuality = 'high';
-  if (background) {
-    if (ASSET_TYPES[assetKey]?.customBackground) paintBackdrop(ctx, backgroundSettings, assetSize);
-    ctx.drawImage(background, 0, 0, width, height);
+  if (image) {
+    if (customBackground) paintBackdrop(ctx, backgroundSettings, assetSize);
+    ctx.drawImage(image, 0, 0, width, height);
   }
   const measure = measureWith(ctx);
   const placements = resolvePlacements(layers, assetKey, assetSize, measure);

@@ -86,7 +86,7 @@ describe('defaultPlacement: text', () => {
   test('sits just under the signature default box', () => {
     const signatureSize = { width: 400, height: 100 };
     const signature = defaultPlacement('signature', signatureSize, square);
-    const p = defaultPlacement('text', size, square, signatureSize);
+    const p = defaultPlacement('text', size, square, 0, signatureSize);
     const signatureBottom = signature.y + signatureSize.height * signature.scale / 2;
     const textTop = p.y - size.height * p.scale / 2;
     expect(p.x).toBe(signature.x);
@@ -100,13 +100,40 @@ describe('defaultPlacement: text', () => {
   });
 
   test('stays inside the asset', () => {
-    const p = defaultPlacement('text', size, wide, { width: 600, height: 600 });
+    const p = defaultPlacement('text', size, wide, 0, { width: 600, height: 600 });
     expect(p.y + size.height * p.scale / 2).toBeLessThanOrEqual(wide.height + 1e-6);
   });
 
   test('long text is narrowed to fit the width', () => {
     const p = defaultPlacement('text', { width: 4000, height: 120 }, square);
     expect(4000 * p.scale).toBeLessThanOrEqual(0.9 * 512 + 1e-6);
+  });
+});
+
+describe('defaultPlacement: index', () => {
+  test('index 0 is the base placement; each further layer of a kind sits lower', () => {
+    const size = { width: 400, height: 120 };
+    const first = defaultPlacement('text', size, youtube, 0);
+    const second = defaultPlacement('text', size, youtube, 1);
+    expect(second.x).toBe(first.x);
+    expect(second.y - first.y).toBeCloseTo(PLACEMENT.stackStep * youtube.height);
+  });
+
+  test('a stacked layer is kept inside the asset', () => {
+    const size = { width: 400, height: 120 };
+    const p = defaultPlacement('text', size, square, 6);
+    expect(p.y + size.height * p.scale / 2).toBeLessThanOrEqual(square.height + 1e-6);
+  });
+
+  test('resolvePlacements counts per kind and ignores stored edits', () => {
+    const [sigA, sigB] = [createSignatureLayer(image(400, 100)), createSignatureLayer(image(400, 100))];
+    const label = text();
+    const before = resolvePlacements([sigA, label, sigB], 'Sticker', square, measure);
+    expect(before[0]).toEqual(defaultPlacement('signature', { width: 400, height: 100 }, square, 0));
+    expect(before[2]).toEqual(defaultPlacement('signature', { width: 400, height: 100 }, square, 1));
+    expect(before[1]).toEqual(defaultPlacement('text', layerSize(label, measure), square, 0, { width: 400, height: 100 }));
+    sigA.placements.Sticker = { x: 9, y: 9, scale: 1, rotation: 0, opacity: 1, manual: true };
+    expect(resolvePlacements([sigA, label, sigB], 'Sticker', square, measure)[2]).toEqual(before[2]);
   });
 });
 
@@ -144,17 +171,50 @@ describe('placements per asset', () => {
     expect(next.Sticker).toEqual({ x: 512, y: 5, scale: 5, rotation: -90, opacity: 1, manual: true });
   });
 
-  test('changing team clears placements but keeps the layers and their content', () => {
+  test('changing team clears placements and origins but keeps the layers and their content', () => {
     const sig = createSignatureLayer(image(400, 100));
     const label = text();
     sig.placements = { Sticker: { x: 1, y: 1, scale: 1, rotation: 0, opacity: 1, manual: true } };
     label.placements = { Sticker: { x: 2, y: 2, scale: 1, rotation: 0, opacity: 1, manual: true } };
+    sig.origins = { Sticker: { x: 3, y: 3, scale: 1, rotation: 0, opacity: 1 } };
     const layers = [sig, label];
     clearPlacements(layers);
     expect(layers).toHaveLength(2);
     expect(layers[0].image).toEqual(image(400, 100));
     expect(layers[1].text).toBe('ABCDE');
     expect(layers.map((l) => l.placements)).toEqual([{}, {}]);
+    expect(layers.map((l) => l.origins)).toEqual([{}, {}]);
+  });
+
+  test('a drawn signature resolves to its origin on that asset and to the default elsewhere', () => {
+    const layer = createSignatureLayer(image(400, 100));
+    layer.origins.Sticker = { x: 40, y: 50, scale: 0.7, rotation: 0, opacity: 1 };
+    expect(resolvePlacements([layer], 'Sticker', asset('Sticker'), measure)[0]).toEqual(layer.origins.Sticker);
+    expect(resolvePlacements([layer], 'DiscordBanner', asset('DiscordBanner'), measure)[0]).toEqual(
+      defaultPlacement('signature', { width: 400, height: 100 }, asset('DiscordBanner'))
+    );
+  });
+
+  test('order is placement, then origin, then default; dropping the placement falls back to the origin', () => {
+    const layer = createSignatureLayer(image(400, 100));
+    layer.origins.Sticker = { x: 40, y: 50, scale: 0.7, rotation: 0, opacity: 1 };
+    const current = resolvePlacements([layer], 'Sticker', asset('Sticker'), measure)[0];
+    layer.placements = editPlacement(layer.placements, 'Sticker', current, { x: 200 }, asset('Sticker'));
+    expect(resolvePlacements([layer], 'Sticker', asset('Sticker'), measure)[0]).toMatchObject({ x: 200, manual: true });
+    const { Sticker: dropped, ...rest } = layer.placements; // what Reset does
+    layer.placements = rest;
+    expect(resolvePlacements([layer], 'Sticker', asset('Sticker'), measure)[0]).toEqual(layer.origins.Sticker);
+  });
+
+  test('editing asset A never changes the origin or placement of B', () => {
+    const layer = createSignatureLayer(image(400, 100));
+    layer.origins.Sticker = { x: 40, y: 50, scale: 0.7, rotation: 0, opacity: 1 };
+    layer.origins.DiscordBanner = { x: 900, y: 300, scale: 1, rotation: 0, opacity: 1 };
+    const before = resolvePlacements([layer], 'DiscordBanner', asset('DiscordBanner'), measure)[0];
+    const current = resolvePlacements([layer], 'Sticker', asset('Sticker'), measure)[0];
+    layer.placements = editPlacement(layer.placements, 'Sticker', current, { x: 1, y: 2, scale: 3 }, asset('Sticker'));
+    expect(resolvePlacements([layer], 'DiscordBanner', asset('DiscordBanner'), measure)[0]).toEqual(before);
+    expect(layer.origins.DiscordBanner).toEqual({ x: 900, y: 300, scale: 1, rotation: 0, opacity: 1 });
   });
 
   test('text default depends on the first signature, not on its edits', () => {

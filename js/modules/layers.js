@@ -1,6 +1,7 @@
-// Layers carry content shared by every asset of a team; where each one sits is
-// stored per asset in layer.placements[assetKey] once the user edits it. An
-// asset without a stored placement gets defaultPlacement().
+// Layers carry content shared by every asset of a team. Where each one sits is
+// per asset: layer.placements[assetKey] once the user edits it, else
+// layer.origins[assetKey] (where a signature was drawn on that asset), else
+// defaultPlacement().
 import { clampScale, hitTest, normalizeTransform } from './transform.js';
 
 // Text is laid out at this font size; a text layer's scale 1 means 100px glyphs.
@@ -17,13 +18,14 @@ export const PLACEMENT = {
   wideCenterY: 0.7,
   textHeight: 0.11,
   textMaxWidth: 0.9,
-  textGap: 0.01
+  textGap: 0.01,
+  stackStep: 0.12 // each further layer of a kind starts this much lower, so they don't pile up
 };
 
 let nextId = 1;
 const newId = () => `layer-${nextId++}`;
 
-export const createSignatureLayer = (image) => ({ id: newId(), kind: 'signature', image, placements: {} });
+export const createSignatureLayer = (image) => ({ id: newId(), kind: 'signature', image, placements: {}, origins: {} });
 
 export const createTextLayer = ({ text, color, outlineColor, outlineWidth }) => ({
   id: newId(),
@@ -33,7 +35,8 @@ export const createTextLayer = ({ text, color, outlineColor, outlineWidth }) => 
   outlineColor,
   outlineWidth,
   font: { family: 'Exo', weight: 900 },
-  placements: {}
+  placements: {},
+  origins: {}
 });
 
 // One font string for measuring and drawing, so hit boxes match the glyphs.
@@ -70,9 +73,10 @@ function signatureDefault(size, asset) {
   return { ...signatureAnchor(asset), scale: clampScale(scale) };
 }
 
-// signatureSize is the first signature layer's size, if any: text goes just
-// under that signature's default box, or at the signature spot when there is none.
-export function defaultPlacement(kind, size, asset, signatureSize = null) {
+// index counts the layers of this kind before it. signatureSize is the first
+// signature layer's size, if any: text goes just under that signature's default
+// box, or at the signature spot when there is none.
+export function defaultPlacement(kind, size, asset, index = 0, signatureSize = null) {
   let x;
   let y;
   let scale;
@@ -83,10 +87,11 @@ export function defaultPlacement(kind, size, asset, signatureSize = null) {
     const signature = signatureSize && signatureDefault(signatureSize, asset);
     const bottom = signature ? anchor.y + signatureSize.height * signature.scale / 2 : anchor.y;
     scale = clampScale(Math.min(PLACEMENT.textHeight * asset.height / size.height, PLACEMENT.textMaxWidth * asset.width / size.width));
-    const half = size.height * scale / 2;
     x = anchor.x;
-    y = Math.min(bottom + PLACEMENT.textGap * asset.height + half, asset.height - half);
+    y = bottom + PLACEMENT.textGap * asset.height + size.height * scale / 2;
   }
+  const half = size.height * scale / 2;
+  y = Math.min(y + index * PLACEMENT.stackStep * asset.height, asset.height - half);
   return { x, y, scale, rotation: 0, opacity: 1 };
 }
 
@@ -95,7 +100,11 @@ export function resolvePlacements(layers, assetKey, asset, measure) {
   const sizes = layers.map((layer) => layerSize(layer, measure));
   const firstSignature = layers.findIndex((layer) => layer.kind === 'signature');
   const signatureSize = firstSignature === -1 ? null : sizes[firstSignature];
-  return layers.map((layer, i) => layer.placements[assetKey] ?? defaultPlacement(layer.kind, sizes[i], asset, signatureSize));
+  const seen = { signature: 0, text: 0 };
+  return layers.map((layer, i) => {
+    const index = seen[layer.kind]++;
+    return layer.placements[assetKey] ?? layer.origins[assetKey] ?? defaultPlacement(layer.kind, sizes[i], asset, index, signatureSize);
+  });
 }
 
 // The topmost layer under the point, or null.
@@ -115,5 +124,8 @@ export function editPlacement(placements, assetKey, current, change, asset) {
 }
 
 export const clearPlacements = (layers) => {
-  for (const layer of layers) layer.placements = {};
+  for (const layer of layers) {
+    layer.placements = {};
+    layer.origins = {};
+  }
 };
