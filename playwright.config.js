@@ -17,11 +17,13 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: `python3 -m http.server ${PORT} --bind 127.0.0.1 --directory "${APP_DIR}"`,
+    // build_assets.py writes the gitignored teams/manifest.json and thumbnails the app needs.
+    // http.server logs every request to stderr, which would bury a build failure.
+    command: `(test -f teams/manifest.json || python3 scripts/build_assets.py) && exec python3 -m http.server ${PORT} --bind 127.0.0.1 2>/dev/null`,
+    cwd: APP_DIR,
     url: BASE_URL,
     reuseExistingServer: false,
-    stdout: 'ignore',
-    stderr: 'ignore', // http.server logs every request to stderr
+    timeout: 120_000,
   },
   projects: [
     {
