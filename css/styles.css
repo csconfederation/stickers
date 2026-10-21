@@ -34,7 +34,8 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -54,6 +55,7 @@ body {
 .main-container {
   display: flex;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -72,19 +74,26 @@ body {
   justify-content: center;
   padding: 2rem;
   position: relative;
-  overflow: auto;
+  user-select: none;
+  /* Its size no longer depends on the canvas, so the wrapper can fit to it. */
+  container-type: size;
 }
 
+/* --w/--h are the canvas pixel size, set from JS. The wrapper shows it at 1:1
+   at most, shrunk to fit inside .canvas-area. */
 .canvas-wrapper {
+  --w: 512;
+  --h: 512;
   position: relative;
+  width: min(calc(var(--w) * 1px), 100cqw, calc(100cqh * var(--w) / var(--h)));
+  aspect-ratio: var(--w) / var(--h);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   background: white;
-  transition: all var(--transition-normal);
+  transition: box-shadow var(--transition-normal);
 }
 
 .canvas-wrapper.drawing-mode {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5), 0 4px 6px rgba(0, 0, 0, 0.3);
-  transform: scale(1.02);
 }
 
 .drawing-mode-tooltip {
@@ -117,6 +126,13 @@ body {
 #mainCanvas {
   display: block;
   cursor: move;
+}
+
+#mainCanvas,
+#drawingCanvas {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
 }
 
 .section {
@@ -323,6 +339,16 @@ input[type="range"] {
   cursor: pointer;
   z-index: 10;
   pointer-events: auto;
+  touch-action: none;
+}
+
+/* Bigger touch target without changing how the handle looks. */
+@media (pointer: coarse) {
+  .transform-handle::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
+  }
 }
 
 .transform-handle.tl { top: -6px; left: -6px; cursor: nw-resize; }
@@ -414,3 +440,31 @@ input[type="file"] {
 /* ===== Utility Classes ===== */
 .hidden { display: none !important; }
 .active { display: block !important; }
+
+/* ===== Narrow screens: canvas pinned on top, controls scroll below ===== */
+@media (max-width: 800px) {
+  body {
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  .main-container {
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .canvas-area {
+    order: -1;
+    flex: none;
+    height: min(100vw, 55vh);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background-color: var(--bg-primary);
+  }
+
+  .sidebar {
+    width: auto;
+    border-right: 0;
+  }
+}
