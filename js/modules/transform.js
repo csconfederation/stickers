@@ -1,126 +1,81 @@
-export class TransformController {
-  constructor(updateCallback) {
-    this.onUpdate = updateCallback;
-    this.isDragging = false;
-    this.isTransforming = false;
-    this.activeHandle = null;
-    this.startPos = { x: 0, y: 0 };
-    this.startTransform = null;
-  }
+// Pure geometry for the signature. A transform is { x, y, scale, rotation,
+// opacity } where x/y is the signature's center in canvas pixels and rotation
+// is in degrees. A source is anything with width and height (image or canvas).
+import { SCALE_LIMITS } from '../config.js';
+import { clamp } from './utils.js';
 
-  startDrag(x, y, currentTransform) {
-    this.isDragging = true;
-    this.startPos = { x, y };
-    this.startTransform = { ...currentTransform };
-  }
+const SNAP_STEP = 15;
+const FIT_RATIO = 0.8;
 
-  startHandleTransform(handle, x, y, currentTransform, signatureDimensions) {
-    this.isTransforming = true;
-    this.activeHandle = handle;
-    this.startPos = { x, y };
-    this.startTransform = { ...currentTransform };
-    this.signatureDimensions = signatureDimensions;
-  }
+export const clampScale = (scale) => clamp(scale, SCALE_LIMITS.min, SCALE_LIMITS.max);
 
-  handleMove(x, y) {
-    if (this.isDragging) {
-      const dx = x - this.startPos.x;
-      const dy = y - this.startPos.y;
-      
-      const newTransform = {
-        ...this.startTransform,
-        x: this.startTransform.x + dx,
-        y: this.startTransform.y + dy
-      };
-      
-      this.onUpdate(newTransform);
-      return true;
-    }
-    
-    if (this.isTransforming && this.activeHandle) {
-      this.handleTransform(x, y);
-      return true;
-    }
-    
-    return false;
-  }
+// Wraps to (-180, 180] so the rotation slider always holds the value.
+export function normalizeAngle(degrees) {
+  const wrapped = ((degrees % 360) + 360) % 360;
+  return wrapped > 180 ? wrapped - 360 : wrapped;
+}
 
-  handleTransform(x, y) {
-    const dx = x - this.startPos.x;
-    const dy = y - this.startPos.y;
-    
-    switch (this.activeHandle) {
-      case 'rotate':
-        this.handleRotation(x, y);
-        break;
-      case 'tl':
-      case 'tr':
-      case 'bl':
-      case 'br':
-        this.handleResize(dx, dy);
-        break;
-    }
-  }
+export function normalizeTransform(t, canvas) {
+  return {
+    x: clamp(t.x, 0, canvas.width),
+    y: clamp(t.y, 0, canvas.height),
+    scale: clampScale(t.scale),
+    rotation: normalizeAngle(t.rotation),
+    opacity: clamp(t.opacity, 0, 1)
+  };
+}
 
-  handleRotation(x, y) {
-    const centerX = this.startTransform.x + 
-      (this.signatureDimensions.width * this.startTransform.scale) / 2;
-    const centerY = this.startTransform.y + 
-      (this.signatureDimensions.height * this.startTransform.scale) / 2;
-    
-    const angle = Math.atan2(y - centerY, x - centerX) * 180 / Math.PI;
-    const startAngle = Math.atan2(
-      this.startPos.y - centerY, 
-      this.startPos.x - centerX
-    ) * 180 / Math.PI;
-    
-    const rotation = this.startTransform.rotation + (angle - startAngle);
-    
-    this.onUpdate({
-      ...this.startTransform,
-      rotation: rotation
-    });
-  }
+// Centered, shrunk only as needed to fit within 80% of the canvas.
+export function centeredTransform(source, canvas) {
+  const fit = Math.min(1, FIT_RATIO * canvas.width / source.width, FIT_RATIO * canvas.height / source.height);
+  return { x: canvas.width / 2, y: canvas.height / 2, scale: clampScale(fit), rotation: 0, opacity: 1 };
+}
 
-  handleResize(dx, dy) {
-    // Simplified scale calculation based on drag distance
-    const handleMultipliers = {
-      'br': { x: 1, y: 1 },
-      'tl': { x: -1, y: -1 },
-      'tr': { x: 1, y: -1 },
-      'bl': { x: -1, y: 1 }
-    };
-    
-    const multiplier = handleMultipliers[this.activeHandle];
-    if (!multiplier) return;
-    
-    const effectiveDx = dx * multiplier.x;
-    const effectiveDy = dy * multiplier.y;
-    const maxDimension = Math.max(this.signatureDimensions.width, this.signatureDimensions.height);
-    const scaleChange = Math.max(effectiveDx, effectiveDy) / maxDimension;
-    
-    const newScale = Math.max(0.1, Math.min(5, this.startTransform.scale + scaleChange));
-    
-    this.onUpdate({
-      ...this.startTransform,
-      scale: newScale
-    });
-  }
+// Maps a canvas point into the signature's unrotated frame, origin at its center.
+export function toLocal(point, t) {
+  const angle = -t.rotation * Math.PI / 180;
+  const dx = point.x - t.x;
+  const dy = point.y - t.y;
+  return {
+    x: dx * Math.cos(angle) - dy * Math.sin(angle),
+    y: dx * Math.sin(angle) + dy * Math.cos(angle)
+  };
+}
 
-  endTransform() {
-    this.isDragging = false;
-    this.isTransforming = false;
-    this.activeHandle = null;
-  }
+export function hitTest(point, t, source) {
+  const local = toLocal(point, t);
+  return Math.abs(local.x) <= source.width * t.scale / 2 && Math.abs(local.y) <= source.height * t.scale / 2;
+}
 
-  updateSignatureBox(element, transform, signatureDimensions) {
-    const width = signatureDimensions.width * transform.scale;
-    const height = signatureDimensions.height * transform.scale;
-    
-    element.style.left = transform.x + 'px';
-    element.style.top = transform.y + 'px';
-    element.style.width = width + 'px';
-    element.style.height = height + 'px';
-    element.style.transform = `rotate(${transform.rotation}deg)`;
-  }
+// The gesture functions take the transform and pointer position at gesture
+// start plus the current pointer, and return only the fields they change.
+export function dragTo(start, startPoint, point) {
+  return { x: start.x + point.x - startPoint.x, y: start.y + point.y - startPoint.y };
+}
+
+// Scales about the center: the corner follows the pointer's distance from it.
+export function resizeTo(start, startPoint, point) {
+  const startDistance = Math.hypot(startPoint.x - start.x, startPoint.y - start.y);
+  if (startDistance < 1) return { scale: start.scale };
+  const distance = Math.hypot(point.x - start.x, point.y - start.y);
+  return { scale: clampScale(start.scale * distance / startDistance) };
+}
+
+export function rotateTo(start, startPoint, point, snap = false) {
+  const angleOf = (p) => Math.atan2(p.y - start.y, p.x - start.x) * 180 / Math.PI;
+  const rotation = normalizeAngle(start.rotation + angleOf(point) - angleOf(startPoint));
+  return { rotation: snap ? normalizeAngle(Math.round(rotation / SNAP_STEP) * SNAP_STEP) : rotation };
+}
+
+// Selection box as percentages of the canvas, so it follows the displayed scale.
+export function boxStyle(t, source, canvas) {
+  const width = source.width * t.scale;
+  const height = source.height * t.scale;
+  return {
+    left: (t.x - width / 2) / canvas.width * 100,
+    top: (t.y - height / 2) / canvas.height * 100,
+    width: width / canvas.width * 100,
+    height: height / canvas.height * 100,
+    rotation: t.rotation
+  };
 }
