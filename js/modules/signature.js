@@ -36,11 +36,13 @@ export function validateUpload(file) {
 // One segment of a stroke. The outline is painted behind everything already on
 // the pad, so it can never cover this stroke's main line.
 function paintSegment(ctx, from, to, brush) {
+  // A zero-length line renders nothing; a hair of length draws the round cap as a dot.
+  const isDot = from.x === to.x && from.y === to.y;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.beginPath();
   ctx.moveTo(from.x, from.y);
-  ctx.lineTo(to.x, to.y);
+  ctx.lineTo(isDot ? to.x + 0.01 : to.x, to.y);
   ctx.strokeStyle = brush.color;
   ctx.lineWidth = brush.size;
   ctx.stroke();
