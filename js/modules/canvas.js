@@ -1,188 +1,82 @@
-import { BACKGROUND_TYPES, GRADIENT_DIRECTIONS } from '../config.js';
+import { ASSET_TYPES, BACKGROUND_TYPES, GRADIENT_DIRECTIONS } from '../config.js';
+import { pointerToCanvas } from './utils.js';
+
+// [x0, y0, x1, y1] of the gradient line for a direction.
+export function gradientEndpoints(direction, width, height) {
+  switch (direction) {
+    case GRADIENT_DIRECTIONS.TO_RIGHT: return [0, 0, width, 0];
+    case GRADIENT_DIRECTIONS.TO_BOTTOM_RIGHT: return [0, 0, width, height];
+    case GRADIENT_DIRECTIONS.TO_BOTTOM_LEFT: return [width, 0, 0, height];
+    default: return [0, 0, 0, height];
+  }
+}
 
 export class CanvasManager {
-  constructor(mainCanvasId, drawingCanvasId) {
-    this.mainCanvas = document.getElementById(mainCanvasId);
-    this.drawingCanvas = document.getElementById(drawingCanvasId);
-    this.ctx = this.mainCanvas.getContext('2d');
-    this.drawCtx = this.drawingCanvas.getContext('2d');
-    
-    // Set up drawing context
-    this.drawCtx.lineCap = 'round';
-    this.drawCtx.lineJoin = 'round';
-    
-    // Initialize drawing state
-    this.currentColor = null;
-    this.currentSize = null;
+  // The wrapper's --w/--h custom properties drive its displayed size (see CSS).
+  constructor(canvas, wrapper) {
+    this.canvas = canvas;
+    this.wrapper = wrapper;
+    this.ctx = canvas.getContext('2d');
   }
 
+  get size() {
+    return { width: this.canvas.width, height: this.canvas.height };
+  }
+
+  // Assigning width/height clears the bitmap, so only do it on a real change.
   setDimensions(width, height) {
-    this.mainCanvas.width = width;
-    this.mainCanvas.height = height;
-    this.drawingCanvas.width = width;
-    this.drawingCanvas.height = height;
-    
-    // Update wrapper dimensions
-    const wrapper = this.mainCanvas.parentElement;
-    wrapper.style.width = width + 'px';
-    wrapper.style.height = height + 'px';
+    if (this.canvas.width !== width || this.canvas.height !== height) {
+      this.canvas.width = width;
+      this.canvas.height = height;
+    }
+    this.wrapper.style.setProperty('--w', width);
+    this.wrapper.style.setProperty('--h', height);
   }
 
-  clear() {
-    this.ctx.clearRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
-  }
-
-  clearDrawing() {
-    this.drawCtx.clearRect(0, 0, this.drawingCanvas.width, this.drawingCanvas.height);
+  pointFromEvent(event) {
+    return pointerToCanvas(event.clientX, event.clientY, this.canvas.getBoundingClientRect(), this.canvas);
   }
 
   render(state) {
-    this.clear();
-    
-    // Draw background
+    const { ctx } = this;
+    const { width, height } = this.canvas;
+    ctx.clearRect(0, 0, width, height);
+
     if (state.backgroundImage) {
-      // Check if we need custom background for sticker assets
-      const isSticker = state.asset === 'Sticker' || state.asset === 'StickerShadow';
-      
-      if (isSticker && state.backgroundSettings.type !== BACKGROUND_TYPES.ORIGINAL) {
-        // First draw the custom background
-        this.renderCustomBackground(state.backgroundSettings);
-        // Then draw the sticker image on top
-        this.ctx.drawImage(
-          state.backgroundImage, 
-          0, 0, 
-          this.mainCanvas.width, 
-          this.mainCanvas.height
-        );
-      } else {
-        // For non-sticker assets or original background, just draw the image
-        this.ctx.drawImage(
-          state.backgroundImage, 
-          0, 0, 
-          this.mainCanvas.width, 
-          this.mainCanvas.height
-        );
-      }
+      if (ASSET_TYPES[state.asset]?.customBackground) this.paintBackdrop(state.backgroundSettings);
+      ctx.drawImage(state.backgroundImage, 0, 0, width, height);
     }
-    
-    // Draw signature
+
     if (state.signature) {
-      this.ctx.save();
-      this.ctx.globalAlpha = state.transform.opacity;
-      
-      const width = state.signature.width * state.transform.scale;
-      const height = state.signature.height * state.transform.scale;
-      const centerX = state.transform.x + width / 2;
-      const centerY = state.transform.y + height / 2;
-      
-      this.ctx.translate(centerX, centerY);
-      this.ctx.rotate(state.transform.rotation * Math.PI / 180);
-      this.ctx.drawImage(
-        state.signature, 
-        -width / 2, 
-        -height / 2, 
-        width, 
-        height
-      );
-      
-      this.ctx.restore();
+      const { x, y, scale, rotation, opacity } = state.transform;
+      const w = state.signature.width * scale;
+      const h = state.signature.height * scale;
+      ctx.save();
+      ctx.globalAlpha = opacity;
+      ctx.translate(x, y);
+      ctx.rotate(rotation * Math.PI / 180);
+      ctx.drawImage(state.signature, -w / 2, -h / 2, w, h);
+      ctx.restore();
     }
   }
 
-  exportImage(filename) {
-    const link = document.createElement('a');
-    link.download = filename;
-    link.href = this.mainCanvas.toDataURL('image/png');
-    link.click();
-  }
-
-  getDrawingData() {
-    return this.drawingCanvas.toDataURL('image/png');
-  }
-
-  // Drawing methods
-  startPath(x, y, color, size, strokeColor = null, strokeWidth = 0) {
-    this.drawCtx.beginPath();
-    this.drawCtx.moveTo(x, y);
-    this.drawCtx.strokeStyle = color;
-    this.drawCtx.lineWidth = size;
-    this.currentColor = color;
-    this.currentSize = size;
-    this.currentStrokeColor = strokeColor;
-    this.currentStrokeWidth = strokeWidth;
-  }
-
-  drawTo(x, y) {
-    this.drawCtx.lineTo(x, y);
-    
-    // Draw stroke (outline) first if enabled
-    if (this.currentStrokeWidth > 0 && this.currentStrokeColor) {
-      this.drawCtx.save();
-      this.drawCtx.strokeStyle = this.currentStrokeColor;
-      this.drawCtx.lineWidth = this.currentSize + (this.currentStrokeWidth * 2);
-      this.drawCtx.stroke();
-      this.drawCtx.restore();
-    }
-    
-    // Draw main line on top
-    this.drawCtx.stroke();
-  }
-
-  endPath() {
-    this.drawCtx.closePath();
-  }
-
-  updateDrawSettings(color, size, strokeColor = null, strokeWidth = 0) {
-    this.drawCtx.strokeStyle = color;
-    this.drawCtx.lineWidth = size;
-    this.currentColor = color;
-    this.currentSize = size;
-    this.currentStrokeColor = strokeColor;
-    this.currentStrokeWidth = strokeWidth;
-  }
-
-  renderCustomBackground(backgroundSettings) {
-    const { type, solidColor, gradientColor1, gradientColor2, gradientDirection } = backgroundSettings;
-    
-    this.ctx.save();
-    
+  paintBackdrop({ type, solidColor, gradientColor1, gradientColor2, gradientDirection }) {
+    const { ctx } = this;
+    const { width, height } = this.canvas;
     if (type === BACKGROUND_TYPES.SOLID) {
-      this.ctx.fillStyle = solidColor;
-      this.ctx.fillRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
+      ctx.fillStyle = solidColor;
     } else if (type === BACKGROUND_TYPES.GRADIENT) {
-      const gradient = this.createGradient(gradientColor1, gradientColor2, gradientDirection);
-      this.ctx.fillStyle = gradient;
-      this.ctx.fillRect(0, 0, this.mainCanvas.width, this.mainCanvas.height);
-    } else if (type === BACKGROUND_TYPES.TRANSPARENT) {
-      // Do nothing - leave transparent
+      const gradient = ctx.createLinearGradient(...gradientEndpoints(gradientDirection, width, height));
+      gradient.addColorStop(0, gradientColor1);
+      gradient.addColorStop(1, gradientColor2);
+      ctx.fillStyle = gradient;
+    } else {
+      return;
     }
-    
-    this.ctx.restore();
+    ctx.fillRect(0, 0, width, height);
   }
 
-  createGradient(color1, color2, direction) {
-    let gradient;
-    
-    switch (direction) {
-      case GRADIENT_DIRECTIONS.TO_BOTTOM:
-        gradient = this.ctx.createLinearGradient(0, 0, 0, this.mainCanvas.height);
-        break;
-      case GRADIENT_DIRECTIONS.TO_RIGHT:
-        gradient = this.ctx.createLinearGradient(0, 0, this.mainCanvas.width, 0);
-        break;
-      case GRADIENT_DIRECTIONS.TO_BOTTOM_RIGHT:
-        gradient = this.ctx.createLinearGradient(0, 0, this.mainCanvas.width, this.mainCanvas.height);
-        break;
-      case GRADIENT_DIRECTIONS.TO_BOTTOM_LEFT:
-        gradient = this.ctx.createLinearGradient(this.mainCanvas.width, 0, 0, this.mainCanvas.height);
-        break;
-      default:
-        gradient = this.ctx.createLinearGradient(0, 0, 0, this.mainCanvas.height);
-    }
-    
-    gradient.addColorStop(0, color1);
-    gradient.addColorStop(1, color2);
-    
-    return gradient;
+  toBlob() {
+    return new Promise((resolve) => this.canvas.toBlob(resolve, 'image/png'));
   }
 }
