@@ -584,7 +584,7 @@ class App extends EventTarget {
     }
   }
 
-  // Light ink gets a dark sheet, so the default black and a white pen both show.
+  // Light ink gets a dark sheet and dark ink a light one, so the default white and a black pen both show.
   syncPaper() {
     $('signPaper').dataset.ink = isLightColor($('brushColor').value) ? 'light' : 'dark';
   }

@@ -11,6 +11,7 @@
   --sunken: #0a0e1a;
   --border: rgba(4, 42, 82, 0.8); /* Deep Patrol / 80 */
   --border-strong: #1d3a5f;
+  --control-border: #042a52cc; /* Deep Patrol / 80, CSC-Web's control and card border */
   --hairline: #1e293b;
   --text: #ffffff;
   --text-2: #f1f5f9;
@@ -53,7 +54,7 @@
   --font-mono: 'Martian Mono', Monaco, Courier, monospace;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --fast: 180ms;
-  --control: 36px;
+  --control: 40px; /* CSC-Web's input height */
 }
 
 [data-theme="light"] {
@@ -65,6 +66,7 @@
   --sunken: #f1f5f9;
   --border: #cbd5e1;
   --border-strong: #94a3b8;
+  --control-border: #94a3b8;
   --hairline: #e2e8f0;
   --text: #020617;
   --text-2: #0f172a;
@@ -221,7 +223,7 @@ button { cursor: pointer; }
   gap: 8px;
   min-height: var(--control);
   padding: 0 14px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--control-border);
   border-radius: 4px;
   background: transparent;
   color: var(--text);
@@ -241,8 +243,8 @@ button { cursor: pointer; }
 }
 
 .btn-primary {
-  min-height: max(40px, var(--control));
-  padding: 0 20px;
+  min-height: max(42px, var(--control));
+  padding: 0 24px;
   background: var(--orange);
   border-color: var(--orange);
   color: var(--on-orange);
@@ -327,7 +329,7 @@ input[type="text"],
 select {
   height: var(--control);
   padding: 0 12px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--control-border);
   border-radius: 4px;
   background: var(--sunken);
   color: var(--text);
@@ -358,7 +360,7 @@ input[type="color"] {
   width: 44px;
   height: var(--control);
   padding: 4px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--control-border);
   border-radius: 4px;
   background: var(--swatch-mat);
   cursor: pointer;
@@ -425,7 +427,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--f
   display: inline-flex;
   gap: 2px;
   padding: 2px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--control-border);
   border-radius: 4px;
   background: var(--sunken);
 }
@@ -488,7 +490,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--f
   min-width: 0;
   height: 44px;
   padding: 0 10px 0 4px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--control-border);
   border-radius: 4px;
   background: var(--sunken);
   color: var(--text);
@@ -801,7 +803,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--f
   max-width: 180px;
   min-height: 30px;
   padding: 0 12px 0 10px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--control-border);
   border-radius: 999px;
   background: transparent;
   color: var(--text-2);
@@ -1118,7 +1120,7 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--f
   margin: auto;
   padding: 0;
   overflow: hidden;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--control-border);
   border-radius: 8px;
   background: var(--surface);
   color: var(--text-2);
