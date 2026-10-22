@@ -8,10 +8,11 @@ export function validateUpload(file) {
 }
 
 // The size an uploaded image is drawn at: shrunk so its longer side is at most
-// UPLOAD.maxSide, never enlarged.
+// UPLOAD.maxSide, never enlarged. Each side stays at least 1px: a zero-sized
+// canvas throws when drawn.
 export function uploadSize(width, height) {
   const factor = Math.min(1, UPLOAD.maxSide / Math.max(width, height));
-  return { width: Math.round(width * factor), height: Math.round(height * factor) };
+  return { width: Math.max(1, Math.round(width * factor)), height: Math.max(1, Math.round(height * factor)) };
 }
 
 // Where a signature drawn on a pad that overlays the stage lands on the asset.

@@ -48,6 +48,11 @@ describe('uploadSize', () => {
     expect(uploadSize(300, 6000)).toEqual({ width: 128, height: 2560 });
   });
 
+  test('keeps a sliver at least 1px on its short side', () => {
+    expect(uploadSize(6000, 1)).toEqual({ width: 2560, height: 1 });
+    expect(uploadSize(1, 6000)).toEqual({ width: 1, height: 2560 });
+  });
+
   test('leaves smaller images alone', () => {
     expect(uploadSize(1000, 500)).toEqual({ width: 1000, height: 500 });
   });
