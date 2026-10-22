@@ -7,6 +7,13 @@ export function validateUpload(file) {
   return null;
 }
 
+// The size an uploaded image is drawn at: shrunk so its longer side is at most
+// UPLOAD.maxSide, never enlarged.
+export function uploadSize(width, height) {
+  const factor = Math.min(1, UPLOAD.maxSide / Math.max(width, height));
+  return { width: Math.round(width * factor), height: Math.round(height * factor) };
+}
+
 // Where a signature drawn on a pad that overlays the stage lands on the asset.
 // capture is DrawingPad.capture(): the cropped image plus its bounds and the
 // pad's size, both in the pad's CSS pixels.

@@ -1,7 +1,7 @@
 import { TEAMS, ASSET_TYPES, BACKGROUND_TYPES, DEFAULT_ASSET, SCALE_LIMITS } from './config.js';
 import { CanvasManager, renderComposite } from './modules/canvas.js';
 import { DrawingPad, padPixelRatio } from './modules/pad.js';
-import { padPlacement, validateUpload } from './modules/signature.js';
+import { padPlacement, uploadSize, validateUpload } from './modules/signature.js';
 import { boxStyle, dragTo, normalizeTransform, resizeTo, rotateTo } from './modules/transform.js';
 import {
   PLACEMENT, clearPlacements, createSignatureLayer, createTextLayer, editPlacement, layerSize,
@@ -135,6 +135,17 @@ async function trimmedArt(src, size) {
   ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(img, box.x, box.y, box.width, box.height,
     (px - box.width * fit) / 2, (px - box.height * fit) / 2, box.width * fit, box.height * fit);
+  return canvas;
+}
+
+// An uploaded image no larger than UPLOAD.maxSide, so every asset can fit it.
+function fitUpload(img) {
+  const { width, height } = uploadSize(img.naturalWidth, img.naturalHeight);
+  if (width === img.naturalWidth && height === img.naturalHeight) return img;
+  const canvas = h('canvas', { width, height });
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0, width, height);
   return canvas;
 }
 
@@ -285,6 +296,8 @@ class App extends EventTarget {
     $('stageMessageBtn').textContent = actionLabel;
     this.stageAction = action;
     this.syncDownload();
+    // The stage resizes when the asset arrives, which would shift ink on the pad.
+    $('drawBtn').disabled = state === 'loading' || state === 'error';
   }
 
   bindHeader() {
@@ -309,7 +322,7 @@ class App extends EventTarget {
       const item = e.target.closest('.wall-item');
       if (!item) return;
       wall.close();
-      if (item.dataset.prefix !== this.state.teamPrefix) this.selectTeam(item.dataset.prefix, this.state.asset);
+      this.selectTeam(item.dataset.prefix, this.state.asset);
     });
     $('wallGrid').addEventListener('keydown', (e) => this.onWallKey(e));
   }
@@ -408,7 +421,14 @@ class App extends EventTarget {
     await this.showBackground(this.state.teamPrefix, asset, this.available, ++this.requestId);
   }
 
+  // Every pick supersedes a load still pending (id is the newest request), so the last
+  // pick wins. Picking what the stage already shows restores it without a load.
   async showBackground(prefix, asset, available, id) {
+    if (prefix === this.state.teamPrefix && asset === this.state.asset && this.state.backgroundImage) {
+      this.setStage('ready');
+      this.syncStageAsset();
+      return;
+    }
     delete $('mainCanvas').dataset.asset;
     this.setStage('loading');
     let image;
@@ -532,7 +552,7 @@ class App extends EventTarget {
   }
 
   startDrawing() {
-    if (this.drawing) return;
+    if (this.drawing || $('drawBtn').disabled) return;
     this.select(null);
     this.drawing = sheetSigning.matches ? 'sheet' : 'overlay';
     this.pad.clear();
@@ -622,7 +642,7 @@ class App extends EventTarget {
     }
     const url = URL.createObjectURL(file);
     try {
-      this.addLayer(createSignatureLayer(await loadImage(url)), { land: true });
+      this.addLayer(createSignatureLayer(fitUpload(await loadImage(url))), { land: true });
     } catch {
       showToast("Couldn't read that image. Try a PNG or a JPEG.");
     } finally {
@@ -1041,15 +1061,22 @@ class App extends EventTarget {
   }
 
   // PNG blob of one asset at its export size, with every layer on it. Loads the
-  // asset's full-size image unless it is the one on the stage.
+  // asset's full-size image unless it is the one on the stage. What it draws is
+  // copied at the call, so a franchise switch or an edit during the load can't
+  // mix into it.
   async exportAsset(assetKey) {
-    const { teamPrefix, layers } = this.state;
+    const { teamPrefix, layers, backgroundSettings } = this.state;
     if (!teamPrefix) return null;
+    const snapshot = {
+      ...this.scene(assetKey, null),
+      backgroundSettings: { ...backgroundSettings },
+      layers: layers.map((layer) => ({ ...layer, placements: { ...layer.placements }, origins: { ...layer.origins } }))
+    };
     const [image] = await Promise.all([
       assetKey === this.state.asset ? this.state.backgroundImage : loadImage(assetUrl(teamPrefix, assetKey)),
-      loadFonts(layers)
+      loadFonts(snapshot.layers)
     ]);
-    const scene = this.scene(assetKey, image);
+    const scene = { ...snapshot, image };
     const canvas = document.createElement('canvas');
     Object.assign(canvas, scene.assetSize);
     renderComposite(canvas.getContext('2d'), scene);
@@ -1061,7 +1088,14 @@ class App extends EventTarget {
   async renderThumb(canvas, assetKey) {
     const prefix = this.state.teamPrefix;
     if (!prefix) return;
-    if (!this.thumbs.has(assetKey)) this.thumbs.set(assetKey, loadImage(thumbUrl(prefix, assetKey)));
+    if (!this.thumbs.has(assetKey)) {
+      const loading = loadImage(thumbUrl(prefix, assetKey));
+      // A failed thumbnail is forgotten, so the next redraw tries it again.
+      loading.catch(() => {
+        if (this.thumbs.get(assetKey) === loading) this.thumbs.delete(assetKey);
+      });
+      this.thumbs.set(assetKey, loading);
+    }
     const [image] = await Promise.all([this.thumbs.get(assetKey), loadFonts(this.state.layers)]);
     if (prefix !== this.state.teamPrefix) return; // the team changed while this loaded
     const scene = this.scene(assetKey, image);
@@ -1075,10 +1109,13 @@ class App extends EventTarget {
     const use = button?.querySelector('use');
     button?.setAttribute('aria-busy', 'true');
     use?.setAttribute('href', '#i-loader-2');
+    // Named now, with the export's own snapshot, in case the franchise changes while it loads.
+    const filename = exportFilename(this.state.teamPrefix, this.team.name, assetKey);
+    const exporting = this.exportAsset(assetKey);
     try {
-      const blob = await this.exportAsset(assetKey);
+      const blob = await exporting;
       if (!blob) throw new Error('no image');
-      saveBlob(blob, exportFilename(this.state.teamPrefix, this.team.name, assetKey));
+      saveBlob(blob, filename);
       showToast(`${displayName} downloaded.`, 'success');
     } catch {
       showToast(`Couldn't make the ${displayName} PNG. Try again.`);
@@ -1128,7 +1165,7 @@ class App extends EventTarget {
   }
 
   chooseAsset(key) {
-    if (!this.available?.[key] || key === this.state.asset) return;
+    if (!this.available?.[key]) return;
     this.selectAsset(key);
     // In the stacked layout the stage may be scrolled away from the kit strip.
     if (stacked.matches) $('stage').scrollIntoView({ block: 'nearest', behavior: reducedMotion.matches ? 'auto' : 'smooth' });

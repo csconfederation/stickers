@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { padPlacement, validateUpload } from '../../js/modules/signature.js';
+import { ASSET_TYPES, SCALE_LIMITS, UPLOAD } from '../../js/config.js';
+import { padPlacement, uploadSize, validateUpload } from '../../js/modules/signature.js';
 
 describe('validateUpload', () => {
   const file = (type, size) => ({ type, size });
@@ -38,5 +39,21 @@ describe('padPlacement', () => {
     expect(p.x).toBe(750);
     expect(p.y).toBe(450);
     expect(p.scale).toBeCloseTo(2.5);
+  });
+});
+
+describe('uploadSize', () => {
+  test('caps the longer side at UPLOAD.maxSide, keeping the aspect ratio', () => {
+    expect(uploadSize(6000, 300)).toEqual({ width: 2560, height: 128 });
+    expect(uploadSize(300, 6000)).toEqual({ width: 128, height: 2560 });
+  });
+
+  test('leaves smaller images alone', () => {
+    expect(uploadSize(1000, 500)).toEqual({ width: 1000, height: 500 });
+  });
+
+  test('a capped upload fits every asset at the smallest scale', () => {
+    const shortest = Math.min(...Object.values(ASSET_TYPES).flatMap((a) => [a.width, a.height]));
+    expect(UPLOAD.maxSide * SCALE_LIMITS.min).toBeLessThanOrEqual(shortest);
   });
 });
