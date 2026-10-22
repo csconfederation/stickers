@@ -140,10 +140,9 @@ test.describe('1. assets', () => {
 
 // 2. Drawing accuracy -------------------------------------------------------
 
-test('2. drawing on the pad lands where the pointer is', { tag: '@desktop' }, async ({ page }) => {
-  await chooseTeam(page, 'ATL')
-  expect(await inkBox(page), 'sticker already has magenta in it').toBeNull()
-
+// Draws one stroke on the pad over the stage, applies it, and checks where the ink landed.
+async function expectPadStrokeLands(page, asset, from, to) {
+  expect(await inkBox(page), `${asset} already has magenta in it`).toBeNull()
   await startDrawing(page, { size: BRUSH })
   const art = await stableRect(page, '#mainCanvas')
   const pad = await stableRect(page, '#drawingCanvas')
@@ -151,8 +150,8 @@ test('2. drawing on the pad lands where the pointer is', { tag: '@desktop' }, as
     expect(Math.abs(pad[k] - art[k]), `pad ${k} vs the art`).toBeLessThan(1.5)
   }
 
-  const a = await toClient(page, FROM)
-  const b = await toClient(page, TO)
+  const a = await toClient(page, from)
+  const b = await toClient(page, to)
   expect(await reaches(page, '#drawingCanvas', a), 'stroke start is not on the pad').toBe(true)
   expect(await reaches(page, '#drawingCanvas', b), 'stroke end is not on the pad').toBe(true)
 
@@ -160,7 +159,20 @@ test('2. drawing on the pad lands where the pointer is', { tag: '@desktop' }, as
   await page.getByTestId('apply').click()
   await expect(signatureBox(page)).toHaveClass(/\bactive\b/)
 
-  await expectStrokeAt(page, FROM, TO, (BRUSH * ASSETS.Sticker.width) / art.width)
+  await expectStrokeAt(page, from, to, (BRUSH * ASSETS[asset].width) / art.width)
+}
+
+test('2. drawing on the pad lands where the pointer is', { tag: '@desktop' }, async ({ page }) => {
+  await chooseTeam(page, 'ATL')
+  await expectPadStrokeLands(page, 'Sticker', FROM, TO)
+})
+
+// The Sticker shows 1:1 at this size; the banner is scaled down 2.8x, so a missing
+// pad-to-asset factor only shows here.
+test('2b. drawing on a scaled-down banner lands where the pointer is', { tag: '@desktop' }, async ({ page }) => {
+  await chooseTeam(page, 'ATL', 'Sticker')
+  await chooseAsset(page, 'ATL', 'YoutubeBanner')
+  await expectPadStrokeLands(page, 'YoutubeBanner', { x: 200, y: 1100 }, { x: 2300, y: 1100 })
 })
 
 // 3. Reset ------------------------------------------------------------------
