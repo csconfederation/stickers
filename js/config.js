@@ -1,95 +1,78 @@
-// Team and asset configurations with franchise IDs
 export const TEAMS = [
-  { id: '50', prefix: 'AG' , name: 'All Good'},
-  { id: '19', prefix: 'ATL', name: 'Atlantis' },
-  { id: '12', prefix: 'AVI', name: 'The Aviary' },
-  { id: '65', prefix: 'COS', name: 'Cosmic' },
-  { id: '9', prefix: 'BCH', name: 'The Beach' },
-  { id: '29', prefix: 'BOA', name: 'Kingsnakes' },
-  { id: '10', prefix: 'BS', name: 'Big Slime' },
-  { id: '20', prefix: 'COW', name: 'What Do You Beef' },
-  { id: '0', prefix: 'CSC', name: 'CSC' }, // Original CSC team
-  { id: '30', prefix: 'DRG', name: 'Pact of Embers' },
-  { id: '62', prefix: 'FLT', name: 'Armada'},
-  { id: '52', prefix: 'FNL', name: 'Final Girl' },
-  { id: '25', prefix: 'FRG', name: 'The Toad-em Pole' },
-  { id: '55', prefix: 'GF', name: "Gone Fishin'" },
-  { id: '13', prefix: 'H4K', name: 'H4ck3r H4v3n' },
-  { id: '3', prefix: 'HG', name: "Headhunter's Guild" },
-  { id: '63', prefix: 'JDM', name: 'Midnight Club'},
-  { id: '4', prefix: 'NAN', name: 'NAdes' },
-  { id: '64', prefix: 'MYT', name: 'The Acheron' },
-  { id: '6', prefix: 'OS', name: 'Order of the Samurai' },
-  { id: '54', prefix: 'TEE', name: 'The 19th Hole' },
-  { id: '14', prefix: 'UPS', name: 'Upsetti Spaghetti' },
-  { id: '56', prefix: 'WIZ', name: 'Counter-Spell' }
-].sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically by name
+  { prefix: 'AG', name: 'All Good' },
+  { prefix: 'ATL', name: 'Atlantis' },
+  { prefix: 'AVI', name: 'The Aviary' },
+  { prefix: 'COS', name: 'Cosmic' },
+  { prefix: 'BCH', name: 'The Beach' },
+  { prefix: 'BOA', name: 'Kingsnakes' },
+  { prefix: 'BS', name: 'Big Slime' },
+  { prefix: 'COW', name: 'What Do You Beef' },
+  { prefix: 'CSC', name: 'CSC' },
+  { prefix: 'DRG', name: 'Pact of Embers' },
+  { prefix: 'FLT', name: 'Armada' },
+  { prefix: 'FNL', name: 'Final Girl' },
+  { prefix: 'FRG', name: 'The Toad-em Pole' },
+  { prefix: 'GF', name: "Gone Fishin'" },
+  { prefix: 'H4K', name: 'H4ck3r H4v3n' },
+  { prefix: 'HG', name: "Headhunter's Guild" },
+  { prefix: 'JDM', name: 'Midnight Club' },
+  { prefix: 'NAN', name: 'NAdes' },
+  { prefix: 'MYT', name: 'The Acheron' },
+  { prefix: 'OS', name: 'Order of the Samurai' },
+  { prefix: 'TEE', name: 'The 19th Hole' },
+  { prefix: 'UPS', name: 'Upsetti Spaghetti' },
+  { prefix: 'WIZ', name: 'Counter-Spell' }
+].sort((a, b) => a.name.localeCompare(b.name));
 
+// width/height are the export size in pixels. customBackground marks the
+// assets whose backdrop the user can replace with a solid color or gradient.
+// placement overrides PLACEMENT (js/modules/layers.js) for where layers land by
+// default: centerX/centerY pin the signature's center, and the rest are fractions
+// of the asset's size like PLACEMENT's.
 export const ASSET_TYPES = {
-  ProfilePicture: { 
-    width: 512, 
-    height: 512, 
-    displayName: 'Profile Picture',
-    filename: 'ProfilePicture.png'
+  // Discord crops avatars to a circle, so both layers stay inside it.
+  ProfilePicture: {
+    width: 512, height: 512, displayName: 'Profile Picture', filename: 'ProfilePicture.png',
+    placement: { centerX: 0.5, centerY: 0.68, signatureMaxWidth: 0.5, signatureMaxHeight: 0.24, textHeight: 0.1, textMaxWidth: 0.6 }
   },
-  DiscordBanner: { 
-    width: 1200, 
-    height: 480, 
-    displayName: 'Discord Banner',
-    filename: 'DiscordBanner.png'
+  // Banners: right of the centered logo and clear of the avatar that overlaps bottom left.
+  DiscordBanner: {
+    width: 1200, height: 480, displayName: 'Discord Banner', filename: 'DiscordBanner.png',
+    placement: { centerX: 0.81, centerY: 0.44, signatureMaxWidth: 0.3, signatureMaxHeight: 0.42, textHeight: 0.15, textMaxWidth: 0.34 }
   },
-  TwitterBanner: { 
-    width: 1500, 
-    height: 500, 
-    displayName: 'Twitter/X Banner',
-    filename: 'TwitterBanner.png'
+  TwitterBanner: {
+    width: 1500, height: 500, displayName: 'Twitter/X Banner', filename: 'TwitterBanner.png',
+    placement: { centerX: 0.8, centerY: 0.44, signatureMaxWidth: 0.3, signatureMaxHeight: 0.44, textHeight: 0.15, textMaxWidth: 0.34 }
   },
-  YoutubeBanner: { 
-    width: 2560, 
-    height: 1440, 
-    displayName: 'YouTube Banner',
-    filename: 'YoutubeBanner.png'
+  // YouTube shows only the middle 1546x423 on every device; both layers stay inside it.
+  YoutubeBanner: {
+    width: 2560, height: 1440, displayName: 'YouTube Banner', filename: 'YoutubeBanner.png',
+    placement: { centerX: 0.68, centerY: 0.47, signatureMaxWidth: 0.22, signatureMaxHeight: 0.19, textHeight: 0.065, textMaxWidth: 0.22 }
   },
-  TwitchBanner: { 
-    width: 1920, 
-    height: 480, 
-    displayName: 'Twitch Banner',
-    filename: 'TwitchBanner.png'
+  TwitchBanner: {
+    width: 1920, height: 480, displayName: 'Twitch Banner', filename: 'TwitchBanner.png',
+    placement: { centerX: 0.79, centerY: 0.44, signatureMaxWidth: 0.26, signatureMaxHeight: 0.46, textHeight: 0.16, textMaxWidth: 0.3 }
   },
-  DesktopBackground: { 
-    width: 1920, 
-    height: 1080, 
-    displayName: 'Desktop Background',
-    filename: 'DesktopBackground.png'
+  // Bottom right, like a signed print: clear of logos large and small, above a taskbar.
+  DesktopBackground: {
+    width: 1920, height: 1080, displayName: 'Desktop Background', filename: 'DesktopBackground.png',
+    placement: { centerX: 0.82, centerY: 0.78, signatureMaxWidth: 0.3, signatureMaxHeight: 0.16, textHeight: 0.06, textMaxWidth: 0.3 }
   },
-  Sticker: { 
-    width: 512, 
-    height: 512, 
-    displayName: 'Sticker',
-    filename: 'Sticker.png'
-  },
-  StickerShadow: { 
-    width: 512, 
-    height: 512, 
-    displayName: 'Sticker Shadow',
-    filename: 'Sticker Shadow.png'
-  },
+  Sticker: { width: 512, height: 512, displayName: 'Sticker', filename: 'Sticker.png', customBackground: true },
+  StickerShadow: { width: 512, height: 512, displayName: 'Sticker Shadow', filename: 'Sticker Shadow.png', customBackground: true },
+  // Season stickers are a disc in a lettered ring: both layers stay on the disc.
   SeasonTeamSticker: {
-    width: 512,
-    height: 512,
-    displayName: 'Season Team Sticker',
-    filename: 'SeasonTeamSticker.png'
+    width: 512, height: 512, displayName: 'Season Team Sticker', filename: 'SeasonTeamSticker.png',
+    placement: { centerX: 0.5, centerY: 0.6, signatureMaxWidth: 0.46, signatureMaxHeight: 0.2, textHeight: 0.08, textMaxWidth: 0.4 }
   },
   SeasonSignatureSticker: {
-    width: 512,
-    height: 512,
-    displayName: 'Season Signature Sticker',
-    filename: 'SeasonSignatureSticker.png'
+    width: 512, height: 512, displayName: 'Season Signature Sticker', filename: 'SeasonSignatureSticker.png',
+    placement: { centerX: 0.5, centerY: 0.6, signatureMaxWidth: 0.46, signatureMaxHeight: 0.2, textHeight: 0.08, textMaxWidth: 0.4 }
   }
 };
 
-// Note: These constants must be defined before DEFAULT_STATE
-// Background type constants
+export const DEFAULT_ASSET = 'Sticker';
+
 export const BACKGROUND_TYPES = {
   ORIGINAL: 'original',
   SOLID: 'solid',
@@ -97,7 +80,6 @@ export const BACKGROUND_TYPES = {
   TRANSPARENT: 'transparent'
 };
 
-// Gradient direction constants
 export const GRADIENT_DIRECTIONS = {
   TO_BOTTOM: 'to-bottom',
   TO_RIGHT: 'to-right',
@@ -105,21 +87,14 @@ export const GRADIENT_DIRECTIONS = {
   TO_BOTTOM_LEFT: 'to-bottom-left'
 };
 
+// Never mutate this; build state with createState() (js/modules/state.js).
+// layers is [{ id, kind, ..., placements }]; see js/modules/layers.js.
 export const DEFAULT_STATE = {
-  teamId: null,
   teamPrefix: null,
-  teamName: null,
   asset: null,
   backgroundImage: null,
-  signature: null,
-  signatureType: null,
-  transform: {
-    x: 100,
-    y: 100,
-    scale: 1,
-    rotation: 0,
-    opacity: 1
-  },
+  layers: [],
+  selectedId: null,
   backgroundSettings: {
     type: BACKGROUND_TYPES.ORIGINAL,
     solidColor: '#ffffff',
@@ -129,57 +104,13 @@ export const DEFAULT_STATE = {
   }
 };
 
-export const DRAWING_CONFIG = {
-  defaultBrushSize: 3,
-  minBrushSize: 1,
-  maxBrushSize: 20,
-  defaultColor: '#000000',
-  defaultStrokeWidth: 0,
-  minStrokeWidth: 0,
-  maxStrokeWidth: 10,
-  defaultStrokeColor: '#000000'
-};
+// Used by both the scale slider and the corner handles.
+export const SCALE_LIMITS = { min: 0.1, max: 5 };
 
-
-// CSS class constants
-export const CSS_CLASSES = {
-  HIDDEN: 'hidden',
-  ACTIVE: 'active',
-  DRAWING_MODE: 'drawing-mode'
-};
-
-// UI text constants
-export const UI_TEXT = {
-  DRAWING_INSTRUCTION: 'Draw your signature on the canvas below, then click "Apply Signature" when finished.',
-  DRAWING_MODE_TOOLTIP: 'Click and drag to draw on the canvas',
-  SELECT_TEAM_PLACEHOLDER: 'Select a Franchise'
-};
-
-// File size and dimension limits
-export const FILE_LIMITS = {
-  MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
-  MIN_FILE_SIZE: 100, // 100 bytes
-  MAX_IMAGE_DIMENSION: 4096,
-  MIN_IMAGE_DIMENSION: 1,
-  FILE_READ_TIMEOUT: 30000, // 30 seconds
-  IMAGE_LOAD_TIMEOUT: 10000, // 10 seconds
-  MAX_DATA_URL_SIZE: 10 * 1024 * 1024 // 10MB
-};
-
-// Animation and timing constants
-export const TIMING = {
-  RENDER_DEBOUNCE: 16, // 60fps
-  SAVE_DEBOUNCE: 500,
-  TOAST_DURATION: 3000,
-  TOAST_ANIMATION: 300
-};
-
-// Transform limits
-export const TRANSFORM_LIMITS = {
-  MIN_SCALE: 0.1,
-  MAX_SCALE: 5,
-  MIN_ROTATION: -180,
-  MAX_ROTATION: 180,
-  MIN_OPACITY: 0,
-  MAX_OPACITY: 1
+// maxSide caps an upload's longer side (the widest export), so at the smallest
+// scale (SCALE_LIMITS.min) it fits every asset.
+export const UPLOAD = {
+  maxBytes: 10 * 1024 * 1024,
+  maxSide: 2560,
+  types: ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/bmp']
 };

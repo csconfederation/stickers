@@ -2,175 +2,280 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSC Franchise Sticker Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="#0f1629">
+    <title>CSC Sticker Generator</title>
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Exo:wght@600;700;800;900&family=Martian+Mono:wght@500;700&family=Roboto:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <a href="#mainCanvas" class="skip-link">Skip to main content</a>
-    <header class="header">
-        <h1>CSC Franchise Sticker Generator</h1>
+    <!-- Tabler outline icons (MIT), stroke set on each .icon -->
+    <svg class="sprite" aria-hidden="true">
+      <symbol id="i-layout-grid" viewBox="0 0 24 24"><path d="M4 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"/><path d="M14 4m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"/><path d="M4 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"/><path d="M14 14m0 1a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v4a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z"/></symbol>
+      <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="M6 9l6 6l6 -6"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 11l5 5l5 -5"/><path d="M12 4l0 12"/></symbol>
+      <symbol id="i-signature" viewBox="0 0 24 24"><path d="M3 17c3.333 -3.333 5 -6 5 -8c0 -3 -1 -3 -2 -3s-2.032 1.085 -2 3c.034 2.048 1.658 4.877 2.5 6c1.5 2 2.5 2.5 3.5 1l2 -3c.333 2.667 1.333 4 3 4c.53 0 2.639 -2 3 -2c.517 0 1.517 .667 3 2"/></symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24"><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"/><path d="M7 9l5 -5l5 5"/><path d="M12 4l0 12"/></symbol>
+      <symbol id="i-typography" viewBox="0 0 24 24"><path d="M4 20l3 0"/><path d="M14 20l7 0"/><path d="M6.9 15l6.9 0"/><path d="M10.2 6.3l5.8 13.7"/><path d="M5 20l6 -16l2 0l7 16"/></symbol>
+      <symbol id="i-background" viewBox="0 0 24 24"><path d="M4 8l4 -4"/><path d="M14 4l-10 10"/><path d="M4 20l16 -16"/><path d="M20 10l-10 10"/><path d="M20 16l-4 4"/></symbol>
+      <symbol id="i-arrow-back-up" viewBox="0 0 24 24"><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></symbol>
+      <symbol id="i-eraser" viewBox="0 0 24 24"><path d="M19 20h-10.5l-4.21 -4.3a1 1 0 0 1 0 -1.41l10 -10a1 1 0 0 1 1.41 0l5 5a1 1 0 0 1 0 1.41l-9.2 9.3"/><path d="M18 13.3l-6.3 -6.3"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5l10 -10"/></symbol>
+      <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></symbol>
+      <symbol id="i-restore" viewBox="0 0 24 24"><path d="M3.06 13a9 9 0 1 0 .49 -4.087"/><path d="M3 4.001v5h5"/><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"/></symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7l16 0"/><path d="M10 11l0 6"/><path d="M14 11l0 6"/><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12"/><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"/></symbol>
+      <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5l0 14"/><path d="M5 12l14 0"/></symbol>
+      <symbol id="i-loader-2" viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9"/></symbol>
+      <symbol id="i-alert-triangle" viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0z"/><path d="M12 16h.01"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"/></symbol>
+      <symbol id="i-photo-off" viewBox="0 0 24 24"><path d="M15 8h.01"/><path d="M7 3h11a3 3 0 0 1 3 3v11m-.856 3.099a2.991 2.991 0 0 1 -2.144 .901h-12a3 3 0 0 1 -3 -3v-12c0 -.845 .349 -1.608 .91 -2.153"/><path d="M3 16l5 -5c.928 -.893 2.072 -.893 3 0l5 5"/><path d="M16.33 12.338c.574 -.054 1.155 .166 1.67 .662l3 3"/><path d="M3 3l18 18"/></symbol>
+    </svg>
+
+    <a href="#canvasWrapper" class="skip-link">Skip to the stage</a>
+
+    <header class="topbar">
+        <h1 class="brand">
+            <img src="favicon-32x32.png" alt="CSC" width="24" height="24">
+            <span class="brand-name">Sticker Generator</span>
+        </h1>
+        <button type="button" class="chip" id="franchiseChip" data-testid="franchise-chip" aria-haspopup="dialog" aria-controls="franchiseWall">
+            <span class="chip-art" id="chipArt"><svg class="icon" aria-hidden="true"><use href="#i-layout-grid"/></svg></span>
+            <span class="chip-code" id="chipCode" hidden></span>
+            <span class="chip-name" id="chipName">Pick your franchise</span>
+            <svg class="icon chip-caret" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+        </button>
+        <button type="button" class="btn btn-primary" id="downloadBtn" data-testid="download" disabled>
+            <svg class="icon" aria-hidden="true"><use href="#i-download"/></svg>
+            <span>Download</span>
+        </button>
     </header>
+    <div class="accent-bar" aria-hidden="true"></div>
 
-    <div class="main-container">
-        <aside class="sidebar">
-            <!-- Background Selection -->
-            <section class="section">
-                <h2>Background</h2>
-                <div class="form-group">
-                    <label for="teamSelect">Franchise</label>
-                    <select id="teamSelect" aria-label="Select franchise for background" aria-required="true">
-                        <!-- Options populated by JavaScript -->
-                    </select>
+    <main class="workspace" id="workspace">
+        <div class="work">
+            <div class="stage" id="stage" data-state="empty">
+                <div class="stage-bar">
+                    <p class="stage-title"><span class="label" id="stageLabel">Sticker</span><span class="mono" id="stageSize">512×512</span></p>
+                    <p class="stage-hint" id="stageHint" aria-live="polite"></p>
                 </div>
-                <div class="form-group">
-                    <label for="assetSelect">Asset Type</label>
-                    <select id="assetSelect" disabled aria-label="Select asset type" aria-required="true">
-                        <option value="">Select Asset</option>
-                        <!-- Options populated by JavaScript -->
-                    </select>
-                </div>
-            </section>
-
-            <!-- Signature Input -->
-            <section class="section">
-                <h2>Signature</h2>
-                <div class="button-group">
-                    <button id="drawBtn">Draw</button>
-                    <button id="uploadBtn">Upload</button>
-                </div>
-                
-                <div class="drawing-tools" id="drawingTools">
-                    <div class="drawing-status">
-                        <p class="drawing-instruction" id="drawingInstruction">Draw your signature on the canvas below, then click "Apply Signature" when finished.</p>
-                    </div>
-                    <div class="form-group">
-                        <label>Brush Size</label>
-                        <div class="slider-group">
-                            <input type="range" id="brushSize" min="1" max="20" value="3">
-                            <span class="slider-value" id="brushSizeValue">3</span>
+                <div class="stage-fit">
+                    <div class="canvas-wrapper" id="canvasWrapper" tabindex="-1">
+                        <canvas id="mainCanvas" role="img" aria-label="Sticker preview"></canvas>
+                        <canvas id="drawingCanvas" aria-label="Signature pad over the stage"></canvas>
+                        <div class="signature-box" id="signatureBox">
+                            <div class="transform-handle tl" data-handle="tl"></div>
+                            <div class="transform-handle tr" data-handle="tr"></div>
+                            <div class="transform-handle bl" data-handle="bl"></div>
+                            <div class="transform-handle br" data-handle="br"></div>
+                            <div class="transform-handle rotate" data-handle="rotate"></div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="brushColor">Color</label>
-                        <input type="color" id="brushColor" value="#000000">
+                    <div class="stage-message" id="stageMessage" hidden>
+                        <p id="stageMessageText"></p>
+                        <button type="button" class="btn" id="stageMessageBtn"></button>
                     </div>
-                    <div class="form-group">
-                        <label>Stroke Width</label>
-                        <div class="slider-group">
-                            <input type="range" id="strokeWidth" min="0" max="10" value="0">
-                            <span class="slider-value" id="strokeWidthValue">0</span>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="strokeColor">Stroke Color</label>
-                        <input type="color" id="strokeColor" value="#000000">
-                    </div>
-                    <div class="drawing-actions">
-                        <button id="clearDrawing">Clear & Start Over</button>
-                        <button id="doneDrawing" class="primary apply-button">
-                            <span class="button-icon">✓</span>
-                            Apply Signature
-                        </button>
-                    </div>
-                </div>
-
-                <div class="file-input-wrapper hidden" id="uploadWrapper">
-                    <input type="file" id="fileInput" accept="image/*">
-                    <label for="fileInput" class="file-input-label">Choose Image File</label>
-                </div>
-            </section>
-
-            <!-- Background Controls -->
-            <section class="section hidden" id="backgroundSection">
-                <h2>Background</h2>
-                <div class="form-group">
-                    <label for="backgroundType">Background Type</label>
-                    <select id="backgroundType">
-                        <option value="original">Original</option>
-                        <option value="solid">Solid Color</option>
-                        <option value="gradient">Gradient</option>
-                        <option value="transparent">Transparent</option>
-                    </select>
-                </div>
-                <div class="form-group hidden" id="solidColorGroup">
-                    <label for="backgroundColor">Background Color</label>
-                    <input type="color" id="backgroundColor" value="#ffffff">
-                </div>
-                <div class="form-group hidden" id="gradientGroup">
-                    <label for="gradientColor1">Gradient Color 1</label>
-                    <input type="color" id="gradientColor1" value="#ffffff">
-                    <label for="gradientColor2">Gradient Color 2</label>
-                    <input type="color" id="gradientColor2" value="#000000">
-                    <label for="gradientDirection">Direction</label>
-                    <select id="gradientDirection">
-                        <option value="to-bottom">Top to Bottom</option>
-                        <option value="to-right">Left to Right</option>
-                        <option value="to-bottom-right">Diagonal ↘</option>
-                        <option value="to-bottom-left">Diagonal ↙</option>
-                    </select>
-                </div>
-            </section>
-
-            <!-- Transform Controls -->
-            <section class="section hidden" id="transformSection">
-                <h2>Transform</h2>
-                <div class="transform-controls">
-                    <div class="form-group">
-                        <label>Scale</label>
-                        <div class="slider-group">
-                            <input type="range" id="scaleSlider" data-state-key="scale" data-unit="%" data-multiplier="0.01" min="10" max="200" value="100">
-                            <span class="slider-value" id="scaleValue">100%</span>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Rotation</label>
-                        <div class="slider-group">
-                            <input type="range" id="rotationSlider" data-state-key="rotation" data-unit="°" min="-180" max="180" value="0">
-                            <span class="slider-value" id="rotationValue">0°</span>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Opacity</label>
-                        <div class="slider-group">
-                            <input type="range" id="opacitySlider" data-state-key="opacity" data-unit="%" data-multiplier="0.01" min="0" max="100" value="100">
-                            <span class="slider-value" id="opacityValue">100%</span>
-                        </div>
-                    </div>
-                    <button id="resetTransform">Reset Transform</button>
-                    <button id="deleteSignature">Delete Signature</button>
-                    <button id="doneTransform" class="primary">Done Editing</button>
-                </div>
-            </section>
-
-            <!-- Export -->
-            <section class="section">
-                <h2>Export</h2>
-                <button id="exportBtn" class="primary" disabled aria-label="Download generated image">Download Image</button>
-            </section>
-        </aside>
-
-        <main class="canvas-area">
-            <div class="canvas-wrapper" id="canvasWrapper">
-                <div class="drawing-mode-tooltip hidden" id="drawingModeTooltip">
-                    ✏️ Drawing Mode - Click 'Apply Signature' when finished
-                </div>
-                <canvas id="mainCanvas" role="img" aria-label="Main canvas for sticker composition"></canvas>
-                <canvas id="drawingCanvas" role="img" aria-label="Drawing canvas for signature"></canvas>
-                <div class="signature-box" id="signatureBox">
-                    <div class="transform-handle tl" data-handle="tl"></div>
-                    <div class="transform-handle tr" data-handle="tr"></div>
-                    <div class="transform-handle bl" data-handle="bl"></div>
-                    <div class="transform-handle br" data-handle="br"></div>
-                    <div class="transform-handle rotate" data-handle="rotate"></div>
                 </div>
             </div>
-        </main>
-    </div>
+
+            <div class="tray" id="tray">
+                <div class="tray-head">
+                    <div class="tabs" role="tablist" aria-label="Tools">
+                        <button type="button" role="tab" class="tab" id="tabSign" data-testid="tab-sign" data-panel="panelSign" aria-controls="panelSign" aria-selected="true">
+                            <svg class="icon" aria-hidden="true"><use href="#i-signature"/></svg>Sign
+                        </button>
+                        <button type="button" role="tab" class="tab" id="tabText" data-testid="tab-text" data-panel="panelText" aria-controls="panelText" aria-selected="false" tabindex="-1">
+                            <svg class="icon" aria-hidden="true"><use href="#i-typography"/></svg>Text
+                        </button>
+                        <button type="button" role="tab" class="tab" id="tabBackground" data-testid="tab-background" data-panel="panelBackground" aria-controls="panelBackground" aria-selected="false" tabindex="-1" hidden>
+                            <svg class="icon" aria-hidden="true"><use href="#i-background"/></svg>Background
+                        </button>
+                    </div>
+                    <div class="layers" id="layerList" role="group" aria-label="Layers"></div>
+                </div>
+
+                <div class="panels">
+                    <div class="panel" role="tabpanel" id="panelSign" aria-labelledby="tabSign">
+                        <div class="sign-choice" id="signChoice">
+                            <button type="button" class="btn" id="drawBtn" data-testid="draw">
+                                <svg class="icon" aria-hidden="true"><use href="#i-signature"/></svg>Draw
+                            </button>
+                            <button type="button" class="btn" id="uploadBtn" data-testid="upload">
+                                <svg class="icon" aria-hidden="true"><use href="#i-upload"/></svg>Upload
+                            </button>
+                            <input type="file" id="fileInput" class="visually-hidden" tabindex="-1" aria-hidden="true" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp">
+                            <p class="hint">Sign once, it lands on every asset. Uploads work best as a PNG with a clear background.</p>
+                        </div>
+
+                        <dialog class="sign-view" id="signView" aria-labelledby="signTitle">
+                            <div class="sign-head">
+                                <h2 class="sign-title" id="signTitle">Sign it</h2>
+                                <p class="hint">It lands on every asset.</p>
+                            </div>
+                            <div class="sign-paper" id="signPaper">
+                                <p class="sign-line" aria-hidden="true">Sign above the line</p>
+                                <canvas id="signPad" aria-label="Signature pad"></canvas>
+                            </div>
+                            <div class="sign-tools">
+                                <label class="field field-range field-size">
+                                    <span class="field-label">Size <output class="mono" id="brushSizeValue" for="brushSize">6</output></span>
+                                    <input type="range" id="brushSize" data-testid="brush-size" min="1" max="20" value="6">
+                                </label>
+                                <label class="field field-swatch field-ink">
+                                    <span class="field-label">Ink</span>
+                                    <input type="color" id="brushColor" data-testid="brush-color" value="#ffffff">
+                                </label>
+                                <label class="field field-swatch field-outline">
+                                    <span class="field-label">Outline</span>
+                                    <input type="color" id="strokeColor" data-testid="outline-color" value="#0a0e1a" aria-label="Outline color">
+                                </label>
+                                <label class="field field-range field-outline-width">
+                                    <span class="field-label">Outline width <output class="mono" id="strokeWidthValue" for="strokeWidth">2</output></span>
+                                    <input type="range" id="strokeWidth" data-testid="outline-width" min="0" max="10" value="2">
+                                </label>
+                                <div class="sign-actions">
+                                    <button type="button" class="btn" id="undoStroke" data-testid="undo">
+                                        <svg class="icon" aria-hidden="true"><use href="#i-arrow-back-up"/></svg>Undo
+                                    </button>
+                                    <button type="button" class="btn" id="clearDrawing" data-testid="clear">
+                                        <svg class="icon" aria-hidden="true"><use href="#i-eraser"/></svg>Clear
+                                    </button>
+                                    <button type="button" class="btn" id="cancelDrawing" data-testid="cancel-sign">
+                                        <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>Cancel
+                                    </button>
+                                    <button type="button" class="btn btn-commit" id="applyDrawing" data-testid="apply">
+                                        <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Apply
+                                    </button>
+                                </div>
+                            </div>
+                        </dialog>
+                    </div>
+
+                    <div class="panel" role="tabpanel" id="panelText" aria-labelledby="tabText">
+                        <div class="panel-row">
+                            <div class="text-entry">
+                                <label class="field field-text">
+                                    <span class="field-label">Name or number</span>
+                                    <input type="text" id="textInput" data-testid="text-input" maxlength="40" placeholder="Your name" autocomplete="off" spellcheck="false">
+                                </label>
+                                <button type="button" class="btn" id="addTextBtn" data-testid="add-text">
+                                    <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Add text
+                                </button>
+                            </div>
+                            <div class="field-group text-style">
+                                <label class="field field-swatch">
+                                    <span class="field-label">Color</span>
+                                    <input type="color" id="textColor" data-testid="text-color" value="#ffffff">
+                                </label>
+                                <label class="field field-swatch">
+                                    <span class="field-label">Outline</span>
+                                    <input type="color" id="textOutlineColor" data-testid="text-outline-color" value="#000000" aria-label="Outline color">
+                                </label>
+                                <label class="field field-range">
+                                    <span class="field-label">Outline width <output class="mono" id="textOutlineWidthValue" for="textOutlineWidth">4</output></span>
+                                    <input type="range" id="textOutlineWidth" data-testid="text-outline-width" min="0" max="20" value="4">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel" role="tabpanel" id="panelBackground" aria-labelledby="tabBackground">
+                        <div class="panel-row">
+                            <fieldset class="segmented" data-testid="background-type">
+                                <legend class="visually-hidden">Background</legend>
+                                <label><input type="radio" name="backgroundType" value="original" data-testid="bg-original" checked><span>Original</span></label>
+                                <label><input type="radio" name="backgroundType" value="solid" data-testid="bg-solid"><span>Solid</span></label>
+                                <label><input type="radio" name="backgroundType" value="gradient" data-testid="bg-gradient"><span>Gradient</span></label>
+                                <label><input type="radio" name="backgroundType" value="transparent" data-testid="bg-transparent"><span>Transparent</span></label>
+                            </fieldset>
+                            <label class="field field-swatch" id="solidColorGroup">
+                                <span class="field-label">Color</span>
+                                <input type="color" id="backgroundColor" data-testid="bg-color" value="#ffffff">
+                            </label>
+                            <div class="field-group" id="gradientGroup">
+                                <label class="field field-swatch">
+                                    <span class="field-label">From</span>
+                                    <input type="color" id="gradientColor1" data-testid="bg-gradient-from" value="#ffffff">
+                                </label>
+                                <label class="field field-swatch">
+                                    <span class="field-label">To</span>
+                                    <input type="color" id="gradientColor2" data-testid="bg-gradient-to" value="#000000">
+                                </label>
+                                <label class="field field-select">
+                                    <span class="field-label">Direction</span>
+                                    <select id="gradientDirection" data-testid="bg-gradient-direction">
+                                        <option value="to-bottom">Top to bottom</option>
+                                        <option value="to-right">Left to right</option>
+                                        <option value="to-bottom-right">Top left to bottom right</option>
+                                        <option value="to-bottom-left">Top right to bottom left</option>
+                                    </select>
+                                </label>
+                            </div>
+                            <p class="hint" id="bgHint"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="layer-bar" id="layerBar">
+                    <p class="hint layer-hint" id="layerHint">Pick a signature or text on the stage, or from Layers, to move, scale or rotate it.</p>
+                    <div class="layer-controls" id="layerControls">
+                        <label class="field field-range">
+                            <span class="field-label">Scale <output class="mono" id="scaleValue" for="scaleSlider">100%</output></span>
+                            <input type="range" id="scaleSlider" data-testid="scale" data-state-key="scale" data-unit="%" data-multiplier="0.01" value="100">
+                        </label>
+                        <label class="field field-range">
+                            <span class="field-label">Rotation <output class="mono" id="rotationValue" for="rotationSlider">0°</output></span>
+                            <input type="range" id="rotationSlider" data-testid="rotation" data-state-key="rotation" data-unit="°" min="-180" max="180" value="0">
+                        </label>
+                        <label class="field field-range">
+                            <span class="field-label">Opacity <output class="mono" id="opacityValue" for="opacitySlider">100%</output></span>
+                            <input type="range" id="opacitySlider" data-testid="opacity" data-state-key="opacity" data-unit="%" data-multiplier="0.01" min="0" max="100" value="100">
+                        </label>
+                        <div class="layer-actions">
+                            <button type="button" class="btn" id="resetTransform" data-testid="reset">
+                                <svg class="icon" aria-hidden="true"><use href="#i-restore"/></svg>Reset
+                            </button>
+                            <button type="button" class="btn btn-danger" id="deleteSignature" data-testid="delete">
+                                <svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg>Delete
+                            </button>
+                            <button type="button" class="btn" id="doneTransform" data-testid="done">
+                                <svg class="icon" aria-hidden="true"><use href="#i-check"/></svg>Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <aside class="kit" id="kit" aria-labelledby="kitTitle">
+            <div class="kit-head">
+                <h2 class="kit-title" id="kitTitle">Your kit</h2>
+                <p class="kit-count mono" id="kitCount"></p>
+            </div>
+            <p class="kit-note" id="kitNote">Sign once, it lands on every asset.</p>
+            <div class="kit-sheet" id="kitSheet"></div>
+        </aside>
+    </main>
 
     <footer class="footer">
-        <p>Thanks to chobits, spidey, ry, and Cameron King • CSC 2026</p>
+        <p>Thanks to chobits, spidey, ry, Cameron King, and Skimix • CSC 2026</p>
     </footer>
+
+    <dialog class="wall" id="franchiseWall" data-testid="franchise-wall" aria-labelledby="wallTitle">
+        <div class="wall-head">
+            <h2 class="wall-title" id="wallTitle">Pick your franchise</h2>
+            <button type="button" class="icon-btn" id="wallClose" data-testid="wall-close" aria-label="Close">
+                <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
+            </button>
+        </div>
+        <p class="wall-note">Your signature goes on every asset your franchise has.</p>
+        <ul class="wall-grid" id="wallGrid"></ul>
+    </dialog>
 
     <script type="module" src="js/app.js"></script>
 </body>

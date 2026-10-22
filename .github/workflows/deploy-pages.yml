@@ -26,13 +26,38 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      # Designers upload PNGs through the GitHub UI, so the manifest and thumbnails
+      # are generated here instead of being committed. A broken PNG fails the deploy.
+      - name: Build asset manifest and thumbnails
+        run: |
+          pip install pillow==11.1.0
+          python3 scripts/build_assets.py
+
+      # Allowlist: publish only what the site loads, not docs/, scripts/, tests/ or dotfiles.
       - name: Prepare site
         run: |
           mkdir _site
-          rsync -a \
-            --exclude ".git" \
-            --exclude ".github" \
-            --exclude "_site" \
+          rsync -a --prune-empty-dirs \
+            --include="/index.html" \
+            --include="/CNAME" \
+            --include="/site.webmanifest" \
+            --include="/favicon*" \
+            --include="/*.png" \
+            --include="/*.svg" \
+            --include="/css/***" \
+            --include="/js/***" \
+            --include="/teams/" \
+            --include="/teams/manifest.json" \
+            --include="/teams/*/" \
+            --include="/teams/*/*.png" \
+            --include="/teams/*/thumbs/" \
+            --include="/teams/*/thumbs/*.webp" \
+            --exclude="*" \
             ./ _site/
 
       - name: Upload Pages artifact

@@ -1,0 +1,1136 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-22T00:00:00Z",
+  "title": "Design System: CSC Sticker Generator",
+  "extensions": {
+    "parentSystem": "https://github.com/csconfederation/CSC-Web/blob/main/DESIGN.md",
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Server-Room Black",
+        "canonical": "oklch(16.6% 0.026 269.4)",
+        "tonalRamp": [
+          "#070a16",
+          "#202532",
+          "#3c4250",
+          "#5b6171",
+          "#7c8293",
+          "#9ea5b6",
+          "#c2c9db",
+          "#e7eeff"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Match-Night Slate",
+        "canonical": "oklch(20.4% 0.040 267.5)",
+        "tonalRamp": [
+          "#050a1c",
+          "#1d2438",
+          "#394157",
+          "#576178",
+          "#78829b",
+          "#9aa5bf",
+          "#bec9e4",
+          "#e3eeff"
+        ]
+      },
+      "raised": {
+        "role": "neutral",
+        "displayName": "Raised Slate",
+        "canonical": "oklch(23.6% 0.048 267.1)",
+        "tonalRamp": [
+          "#04091f",
+          "#1a243d",
+          "#36415c",
+          "#55617d",
+          "#7582a0",
+          "#97a5c4",
+          "#bbc9ea",
+          "#e0eeff"
+        ]
+      },
+      "sunken": {
+        "role": "neutral",
+        "displayName": "Recess Black",
+        "canonical": "oklch(16.6% 0.026 269.4)",
+        "tonalRamp": [
+          "#070a16",
+          "#202532",
+          "#3c4250",
+          "#5b6171",
+          "#7c8293",
+          "#9ea5b6",
+          "#c2c9db",
+          "#e7eeff"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Deep Patrol / 80",
+        "canonical": "oklch(28.5% 0.084 253.7 / 0.8)",
+        "tonalRamp": [
+          "#00072d",
+          "#00254c",
+          "#1f436d",
+          "#3e6390",
+          "#5e85b4",
+          "#80a8d9",
+          "#a3cdff",
+          "#c8f2ff"
+        ]
+      },
+      "border-strong": {
+        "role": "neutral",
+        "displayName": "Strong Edge",
+        "canonical": "oklch(34.6% 0.074 255.4)",
+        "tonalRamp": [
+          "#000829",
+          "#082548",
+          "#264369",
+          "#44638b",
+          "#6484ae",
+          "#86a8d3",
+          "#a9ccf9",
+          "#cef2ff"
+        ]
+      },
+      "control-border": {
+        "role": "neutral",
+        "displayName": "Control Border",
+        "canonical": "oklch(28.5% 0.084 253.7 / 0.8)",
+        "tonalRamp": [
+          "#00072d",
+          "#00254c",
+          "#1f436d",
+          "#3e6390",
+          "#5e85b4",
+          "#80a8d9",
+          "#a3cdff",
+          "#c8f2ff"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline Slate",
+        "canonical": "oklch(27.9% 0.037 260.0)",
+        "tonalRamp": [
+          "#030b1a",
+          "#1a2537",
+          "#374256",
+          "#556277",
+          "#768399",
+          "#98a6bd",
+          "#bbcae2",
+          "#e0f0ff"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Text Primary",
+        "canonical": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "text-2": {
+        "role": "neutral",
+        "displayName": "Text Secondary",
+        "canonical": "oklch(96.8% 0.007 247.9)",
+        "tonalRamp": [
+          "#090b0e",
+          "#222528",
+          "#3f4246",
+          "#5e6265",
+          "#7f8386",
+          "#a2a5a9",
+          "#c6cacd",
+          "#ebeff3"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Text Muted",
+        "canonical": "oklch(71.1% 0.035 256.8)",
+        "tonalRamp": [
+          "#030b1a",
+          "#1a2636",
+          "#364355",
+          "#556275",
+          "#758498",
+          "#97a6bb",
+          "#bbcbe0",
+          "#e0f0ff"
+        ]
+      },
+      "subtle": {
+        "role": "neutral",
+        "displayName": "Text Subtle",
+        "canonical": "oklch(55.4% 0.041 257.4)",
+        "tonalRamp": [
+          "#020b1c",
+          "#182639",
+          "#344358",
+          "#536279",
+          "#73849b",
+          "#95a6bf",
+          "#b9cbe4",
+          "#def0ff"
+        ]
+      },
+      "orange": {
+        "role": "primary",
+        "displayName": "Floodlight Orange",
+        "canonical": "oklch(75.2% 0.165 62.2)",
+        "tonalRamp": [
+          "#2e0000",
+          "#520000",
+          "#752400",
+          "#9a4700",
+          "#c06900",
+          "#e68d2c",
+          "#ffb157",
+          "#ffd77e"
+        ]
+      },
+      "orange-hover": {
+        "role": "primary",
+        "displayName": "Flare Orange",
+        "canonical": "oklch(82.6% 0.145 74.7)",
+        "tonalRamp": [
+          "#290000",
+          "#4a0c00",
+          "#6c2f00",
+          "#905000",
+          "#b47200",
+          "#da961d",
+          "#ffba4e",
+          "#ffe077"
+        ]
+      },
+      "orange-press": {
+        "role": "primary",
+        "displayName": "Banked Ember",
+        "canonical": "oklch(67.3% 0.155 60.1)",
+        "tonalRamp": [
+          "#2f0000",
+          "#530000",
+          "#772200",
+          "#9b4500",
+          "#c16800",
+          "#e88b31",
+          "#ffb05a",
+          "#ffd581"
+        ]
+      },
+      "on-orange": {
+        "role": "primary",
+        "displayName": "Lobby Ink",
+        "canonical": "oklch(18.8% 0.033 74.2)",
+        "tonalRamp": [
+          "#130900",
+          "#2f2313",
+          "#4d402f",
+          "#6d5f4d",
+          "#8e806d",
+          "#b2a28f",
+          "#d6c7b2",
+          "#fcecd7"
+        ]
+      },
+      "navy": {
+        "role": "secondary",
+        "displayName": "CT-Side Navy",
+        "canonical": "oklch(37.4% 0.114 254.4)",
+        "tonalRamp": [
+          "#000039",
+          "#00215a",
+          "#09417c",
+          "#2e62a0",
+          "#5084c5",
+          "#72a8eb",
+          "#95cdff",
+          "#baf3ff"
+        ]
+      },
+      "navy-hover": {
+        "role": "secondary",
+        "displayName": "Patrol Navy Light",
+        "canonical": "oklch(44.0% 0.133 253.9)",
+        "tonalRamp": [
+          "#000040",
+          "#001f62",
+          "#004086",
+          "#2062aa",
+          "#4484d0",
+          "#67a8f6",
+          "#8acdff",
+          "#aff3ff"
+        ]
+      },
+      "on-navy": {
+        "role": "secondary",
+        "displayName": "On Navy",
+        "canonical": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "danger": {
+        "role": "neutral",
+        "displayName": "Performance Bad",
+        "canonical": "oklch(63.1% 0.194 29.4)",
+        "tonalRamp": [
+          "#340000",
+          "#590000",
+          "#7f0703",
+          "#a53529",
+          "#cc594a",
+          "#f47d6c",
+          "#ffa18f",
+          "#ffc6b3"
+        ]
+      },
+      "success": {
+        "role": "neutral",
+        "displayName": "Performance Great",
+        "canonical": "oklch(74.6% 0.181 152.3)",
+        "tonalRamp": [
+          "#001700",
+          "#003600",
+          "#005610",
+          "#007832",
+          "#1c9b53",
+          "#4cbf75",
+          "#74e598",
+          "#9bffbd"
+        ]
+      },
+      "focus": {
+        "role": "neutral",
+        "displayName": "Focus Flare",
+        "canonical": "oklch(82.6% 0.145 74.7)",
+        "tonalRamp": [
+          "#290000",
+          "#4a0c00",
+          "#6c2f00",
+          "#905000",
+          "#b47200",
+          "#da961d",
+          "#ffba4e",
+          "#ffe077"
+        ]
+      },
+      "track": {
+        "role": "neutral",
+        "displayName": "Slider Track",
+        "canonical": "oklch(27.9% 0.037 260.0)",
+        "tonalRamp": [
+          "#030b1a",
+          "#1a2537",
+          "#374256",
+          "#556277",
+          "#768399",
+          "#98a6bd",
+          "#bbcae2",
+          "#e0f0ff"
+        ]
+      },
+      "check-a": {
+        "role": "neutral",
+        "displayName": "Checker Dark",
+        "canonical": "oklch(18.5% 0.034 267.4)",
+        "tonalRamp": [
+          "#060a19",
+          "#1e2536",
+          "#3a4255",
+          "#596175",
+          "#798298",
+          "#9ba5bb",
+          "#bfc9e0",
+          "#e4eeff"
+        ]
+      },
+      "check-b": {
+        "role": "neutral",
+        "displayName": "Checker Light",
+        "canonical": "oklch(22.0% 0.042 264.8)",
+        "tonalRamp": [
+          "#040a1c",
+          "#1b2539",
+          "#374259",
+          "#566179",
+          "#76829c",
+          "#98a5c0",
+          "#bcc9e5",
+          "#e1efff"
+        ]
+      },
+      "scrim": {
+        "role": "neutral",
+        "displayName": "Scrim",
+        "canonical": "oklch(13.4% 0.017 262.2 / 0.78)",
+        "tonalRamp": [
+          "#070b13",
+          "#20252e",
+          "#3d424b",
+          "#5c616b",
+          "#7d838d",
+          "#9fa5b0",
+          "#c3c9d5",
+          "#e8effa"
+        ]
+      },
+      "skeleton-a": {
+        "role": "neutral",
+        "displayName": "Shimmer Base",
+        "canonical": "oklch(22.0% 0.042 264.8)",
+        "tonalRamp": [
+          "#040a1c",
+          "#1b2539",
+          "#374259",
+          "#566179",
+          "#76829c",
+          "#98a5c0",
+          "#bcc9e5",
+          "#e1efff"
+        ]
+      },
+      "skeleton-b": {
+        "role": "neutral",
+        "displayName": "Shimmer Highlight",
+        "canonical": "oklch(26.0% 0.052 265.6)",
+        "tonalRamp": [
+          "#030920",
+          "#19243e",
+          "#35415e",
+          "#53617f",
+          "#7482a2",
+          "#96a5c6",
+          "#b9c9ec",
+          "#deefff"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Signing Paper",
+        "canonical": "oklch(96.8% 0.007 247.9)",
+        "tonalRamp": [
+          "#090b0e",
+          "#222528",
+          "#3f4246",
+          "#5e6265",
+          "#7f8386",
+          "#a2a5a9",
+          "#c6cacd",
+          "#ebeff3"
+        ]
+      },
+      "paper-dark": {
+        "role": "neutral",
+        "displayName": "Dark Signing Paper",
+        "canonical": "oklch(27.9% 0.037 260.0)",
+        "tonalRamp": [
+          "#030b1a",
+          "#1a2537",
+          "#374256",
+          "#556277",
+          "#768399",
+          "#98a6bd",
+          "#bbcae2",
+          "#e0f0ff"
+        ]
+      },
+      "paper-line": {
+        "role": "neutral",
+        "displayName": "Sign Line",
+        "canonical": "oklch(20.8% 0.040 265.8 / 0.28)",
+        "tonalRamp": [
+          "#040a1c",
+          "#1c2539",
+          "#384258",
+          "#566178",
+          "#77829b",
+          "#99a5bf",
+          "#bdc9e4",
+          "#e2efff"
+        ]
+      },
+      "paper-line-dark": {
+        "role": "neutral",
+        "displayName": "Sign Line on Dark",
+        "canonical": "oklch(96.8% 0.007 247.9 / 0.3)",
+        "tonalRamp": [
+          "#090b0e",
+          "#222528",
+          "#3f4246",
+          "#5e6265",
+          "#7f8386",
+          "#a2a5a9",
+          "#c6cacd",
+          "#ebeff3"
+        ]
+      },
+      "paper-ink": {
+        "role": "neutral",
+        "displayName": "Paper Label Ink",
+        "canonical": "oklch(44.6% 0.037 257.3)",
+        "tonalRamp": [
+          "#030b1b",
+          "#192637",
+          "#354356",
+          "#546277",
+          "#748499",
+          "#97a6bd",
+          "#bacbe2",
+          "#dff0ff"
+        ]
+      },
+      "paper-ink-dark": {
+        "role": "neutral",
+        "displayName": "Paper Label Ink on Dark",
+        "canonical": "oklch(71.1% 0.035 256.8)",
+        "tonalRamp": [
+          "#030b1a",
+          "#1a2636",
+          "#364355",
+          "#556275",
+          "#758498",
+          "#97a6bb",
+          "#bbcbe0",
+          "#e0f0ff"
+        ]
+      },
+      "handle": {
+        "role": "neutral",
+        "displayName": "Handle White",
+        "canonical": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "box-edge": {
+        "role": "neutral",
+        "displayName": "Selection Inner Edge",
+        "canonical": "oklch(16.6% 0.026 269.4 / 0.55)",
+        "tonalRamp": [
+          "#070a16",
+          "#202532",
+          "#3c4250",
+          "#5b6171",
+          "#7c8293",
+          "#9ea5b6",
+          "#c2c9db",
+          "#e7eeff"
+        ]
+      },
+      "selection": {
+        "role": "neutral",
+        "displayName": "Text Selection",
+        "canonical": "oklch(75.2% 0.165 62.2 / 0.35)",
+        "tonalRamp": [
+          "#2e0000",
+          "#520000",
+          "#752400",
+          "#9a4700",
+          "#c06900",
+          "#e68d2c",
+          "#ffb157",
+          "#ffd77e"
+        ]
+      },
+      "swatch-edge": {
+        "role": "neutral",
+        "displayName": "Swatch Edge",
+        "canonical": "oklch(100.0% 0.000 89.9 / 0.22)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "swatch-mat": {
+        "role": "neutral",
+        "displayName": "Swatch Mat",
+        "canonical": "oklch(55.4% 0.041 257.4)",
+        "tonalRamp": [
+          "#020b1c",
+          "#182639",
+          "#344358",
+          "#536279",
+          "#73849b",
+          "#95a6bf",
+          "#b9cbe4",
+          "#def0ff"
+        ]
+      },
+      "ground-light": {
+        "role": "neutral",
+        "displayName": "Server-Room Black (light)",
+        "canonical": "oklch(96.0% 0.008 253.9)",
+        "tonalRamp": [
+          "#090b0e",
+          "#222529",
+          "#3f4246",
+          "#5e6266",
+          "#7f8387",
+          "#a2a5aa",
+          "#c6c9ce",
+          "#ebeff4"
+        ]
+      },
+      "surface-light": {
+        "role": "neutral",
+        "displayName": "Match-Night Slate (light)",
+        "canonical": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#a5a5a5",
+          "#c9c9c9",
+          "#eeeeee"
+        ]
+      },
+      "raised-light": {
+        "role": "neutral",
+        "displayName": "Raised Slate (light)",
+        "canonical": "oklch(97.5% 0.006 255.5)",
+        "tonalRamp": [
+          "#090b0e",
+          "#232528",
+          "#404245",
+          "#5f6165",
+          "#808286",
+          "#a2a5a9",
+          "#c6c9cd",
+          "#eceff3"
+        ]
+      },
+      "sunken-light": {
+        "role": "neutral",
+        "displayName": "Recess Black (light)",
+        "canonical": "oklch(96.8% 0.007 247.9)",
+        "tonalRamp": [
+          "#090b0e",
+          "#222528",
+          "#3f4246",
+          "#5e6265",
+          "#7f8386",
+          "#a2a5a9",
+          "#c6cacd",
+          "#ebeff3"
+        ]
+      },
+      "border-light": {
+        "role": "neutral",
+        "displayName": "Deep Patrol / 80 (light)",
+        "canonical": "oklch(86.9% 0.020 252.9)",
+        "tonalRamp": [
+          "#060c13",
+          "#1e262f",
+          "#3b434d",
+          "#59626d",
+          "#7a838e",
+          "#9da6b2",
+          "#c0cad6",
+          "#e5f0fc"
+        ]
+      },
+      "border-strong-light": {
+        "role": "neutral",
+        "displayName": "Strong Edge (light)",
+        "canonical": "oklch(71.1% 0.035 256.8)",
+        "tonalRamp": [
+          "#030b1a",
+          "#1a2636",
+          "#364355",
+          "#556275",
+          "#758498",
+          "#97a6bb",
+          "#bbcbe0",
+          "#e0f0ff"
+        ]
+      },
+      "control-border-light": {
+        "role": "neutral",
+        "displayName": "Control Border (light)",
+        "canonical": "oklch(71.1% 0.035 256.8)",
+        "tonalRamp": [
+          "#030b1a",
+          "#1a2636",
+          "#364355",
+          "#556275",
+          "#758498",
+          "#97a6bb",
+          "#bbcbe0",
+          "#e0f0ff"
+        ]
+      },
+      "hairline-light": {
+        "role": "neutral",
+        "displayName": "Hairline Slate (light)",
+        "canonical": "oklch(92.9% 0.013 255.5)",
+        "tonalRamp": [
+          "#080b10",
+          "#21252b",
+          "#3e4249",
+          "#5d6268",
+          "#7d838a",
+          "#a0a6ad",
+          "#c4cad1",
+          "#e9eff7"
+        ]
+      },
+      "text-light": {
+        "role": "neutral",
+        "displayName": "Text Primary (light)",
+        "canonical": "oklch(12.9% 0.041 264.7)",
+        "tonalRamp": [
+          "#040a1c",
+          "#1b2539",
+          "#374258",
+          "#566179",
+          "#76829b",
+          "#99a5bf",
+          "#bcc9e4",
+          "#e1efff"
+        ]
+      },
+      "text-2-light": {
+        "role": "neutral",
+        "displayName": "Text Secondary (light)",
+        "canonical": "oklch(20.8% 0.040 265.8)",
+        "tonalRamp": [
+          "#040a1c",
+          "#1c2539",
+          "#384258",
+          "#566178",
+          "#77829b",
+          "#99a5bf",
+          "#bdc9e4",
+          "#e2efff"
+        ]
+      },
+      "muted-light": {
+        "role": "neutral",
+        "displayName": "Text Muted (light)",
+        "canonical": "oklch(44.6% 0.037 257.3)",
+        "tonalRamp": [
+          "#030b1b",
+          "#192637",
+          "#354356",
+          "#546277",
+          "#748499",
+          "#97a6bd",
+          "#bacbe2",
+          "#dff0ff"
+        ]
+      },
+      "orange-hover-light": {
+        "role": "primary",
+        "displayName": "Flare Orange (light)",
+        "canonical": "oklch(79.4% 0.152 68.0)",
+        "tonalRamp": [
+          "#2c0000",
+          "#4f0000",
+          "#722800",
+          "#964b00",
+          "#bb6d00",
+          "#e2901f",
+          "#ffb550",
+          "#ffda77"
+        ]
+      },
+      "danger-light": {
+        "role": "neutral",
+        "displayName": "Performance Bad (light)",
+        "canonical": "oklch(54.3% 0.174 29.7)",
+        "tonalRamp": [
+          "#340000",
+          "#590000",
+          "#7f0802",
+          "#a53529",
+          "#cc594a",
+          "#f47d6c",
+          "#ffa18e",
+          "#ffc7b2"
+        ]
+      },
+      "success-light": {
+        "role": "neutral",
+        "displayName": "Performance Great (light)",
+        "canonical": "oklch(54.2% 0.129 152.7)",
+        "tonalRamp": [
+          "#001600",
+          "#003400",
+          "#00541b",
+          "#00753b",
+          "#38985c",
+          "#5ebc7d",
+          "#84e1a0",
+          "#a9ffc5"
+        ]
+      },
+      "focus-light": {
+        "role": "neutral",
+        "displayName": "Focus Flare (light)",
+        "canonical": "oklch(67.3% 0.155 60.1)",
+        "tonalRamp": [
+          "#2f0000",
+          "#530000",
+          "#772200",
+          "#9b4500",
+          "#c16800",
+          "#e88b31",
+          "#ffb05a",
+          "#ffd581"
+        ]
+      },
+      "track-light": {
+        "role": "neutral",
+        "displayName": "Slider Track (light)",
+        "canonical": "oklch(86.9% 0.020 252.9)",
+        "tonalRamp": [
+          "#060c13",
+          "#1e262f",
+          "#3b434d",
+          "#59626d",
+          "#7a838e",
+          "#9da6b2",
+          "#c0cad6",
+          "#e5f0fc"
+        ]
+      },
+      "check-a-light": {
+        "role": "neutral",
+        "displayName": "Checker Dark (light)",
+        "canonical": "oklch(94.7% 0.011 256.7)",
+        "tonalRamp": [
+          "#080b10",
+          "#22252a",
+          "#3e4248",
+          "#5d6267",
+          "#7e8389",
+          "#a1a5ac",
+          "#c5cad0",
+          "#eaeff6"
+        ]
+      },
+      "check-b-light": {
+        "role": "neutral",
+        "displayName": "Checker Light (light)",
+        "canonical": "oklch(98.4% 0.003 247.9)",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#242527",
+          "#414244",
+          "#606163",
+          "#818284",
+          "#a3a5a7",
+          "#c7c9cb",
+          "#edeff1"
+        ]
+      },
+      "scrim-light": {
+        "role": "neutral",
+        "displayName": "Scrim (light)",
+        "canonical": "oklch(20.8% 0.040 265.8 / 0.5)",
+        "tonalRamp": [
+          "#040a1c",
+          "#1c2539",
+          "#384258",
+          "#566178",
+          "#77829b",
+          "#99a5bf",
+          "#bdc9e4",
+          "#e2efff"
+        ]
+      },
+      "skeleton-a-light": {
+        "role": "neutral",
+        "displayName": "Shimmer Base (light)",
+        "canonical": "oklch(92.9% 0.013 255.5)",
+        "tonalRamp": [
+          "#080b10",
+          "#21252b",
+          "#3e4249",
+          "#5d6268",
+          "#7d838a",
+          "#a0a6ad",
+          "#c4cad1",
+          "#e9eff7"
+        ]
+      },
+      "skeleton-b-light": {
+        "role": "neutral",
+        "displayName": "Shimmer Highlight (light)",
+        "canonical": "oklch(96.8% 0.007 247.9)",
+        "tonalRamp": [
+          "#090b0e",
+          "#222528",
+          "#3f4246",
+          "#5e6265",
+          "#7f8386",
+          "#a2a5a9",
+          "#c6cacd",
+          "#ebeff3"
+        ]
+      },
+      "swatch-edge-light": {
+        "role": "neutral",
+        "displayName": "Swatch Edge (light)",
+        "canonical": "oklch(20.8% 0.040 265.8 / 0.28)",
+        "tonalRamp": [
+          "#040a1c",
+          "#1c2539",
+          "#384258",
+          "#566178",
+          "#77829b",
+          "#99a5bf",
+          "#bdc9e4",
+          "#e2efff"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "title": {
+        "displayName": "Title",
+        "purpose": "Panel and dialog titles: Your kit, Pick your franchise, Sign it."
+      },
+      "chip-name": {
+        "displayName": "Chip Name",
+        "purpose": "Franchise name in the header chip."
+      },
+      "brand": {
+        "displayName": "Brand",
+        "purpose": "Header wordmark; hidden below 600px."
+      },
+      "label": {
+        "displayName": "Kerned Label",
+        "purpose": "Tabs, field labels, Download, stage asset name."
+      },
+      "label-small": {
+        "displayName": "Small Kerned Label",
+        "purpose": "Kit tile names and the sign line."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Copy, buttons, layer chips."
+      },
+      "hint": {
+        "displayName": "Hint",
+        "purpose": "Muted helper text, max 60ch."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Prefix codes, asset sizes, counts, slider readouts."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Every transition and the landing stamp."
+      },
+      {
+        "name": "fast",
+        "value": "180ms",
+        "purpose": "State transitions: fill, border, color, outline."
+      },
+      {
+        "name": "landing-stamp",
+        "value": "460ms, 45ms stagger; scale(1.8) blur(4px) opacity 0 to rest",
+        "purpose": "A new signature stamps onto each ready kit tile in turn."
+      },
+      {
+        "name": "rise",
+        "value": "200ms; translateY(8px) and opacity 0 to rest",
+        "purpose": "Franchise wall opening; the toast uses the same 200ms slide."
+      },
+      {
+        "name": "shimmer",
+        "value": "1.4s linear infinite",
+        "purpose": "Loading stage, kit tiles and wall art."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "prefers-reduced-motion: reduce",
+        "purpose": "All animation and transitions cut; the landing stamp is skipped."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sheet",
+        "value": "599px",
+        "purpose": "max-width: full-screen wall and signing sheet, single-column tools."
+      },
+      {
+        "name": "stacked",
+        "value": "899px",
+        "purpose": "max-width: stage, kit strip, tray stack."
+      },
+      {
+        "name": "desktop",
+        "value": "900px",
+        "purpose": "min-width: one viewport, 2fr / minmax(300px, 1fr)."
+      },
+      {
+        "name": "coarse",
+        "value": "pointer: coarse",
+        "purpose": "--control 44px and enlarged hit areas."
+      },
+      {
+        "name": "kit-narrow",
+        "value": "@container kit (max-width: 340px)",
+        "purpose": "Squares two by two, banners full width."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Download Button",
+      "kind": "button",
+      "refersTo": "button-download",
+      "description": "The one orange primary per screen, header right. Dark lobby ink, never white.",
+      "html": "<button class=\"ds-btn-download\" type=\"button\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2\"/><path d=\"M7 11l5 5l5 -5\"/><path d=\"M12 4v12\"/></svg>Download</button>",
+      "css": ".ds-btn-download { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 24px; border: 1px solid var(--orange, #f7931e); border-radius: 4px; background: var(--orange, #f7931e); color: var(--on-orange, #1c1103); font: 700 0.75rem/1 Exo, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; transition: background-color 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms cubic-bezier(0.16, 1, 0.3, 1), color 180ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn-download:hover { background: var(--orange-hover, #fdb74b); border-color: var(--orange-hover, #fdb74b); } .ds-btn-download:active { background: var(--orange-press, #d97b0d); border-color: var(--orange-press, #d97b0d); } .ds-btn-download:focus-visible { outline: 2px solid var(--focus, #fdb74b); outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Default action. Hover is a raised fill, never orange.",
+      "html": "<button class=\"ds-btn\" type=\"button\">Clear</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 14px; border: 1px solid var(--control-border, #042a52cc); border-radius: 4px; background: transparent; color: var(--text, #ffffff); font: 500 0.875rem/1 Roboto, sans-serif; transition: background-color 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms cubic-bezier(0.16, 1, 0.3, 1), color 180ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-btn:hover { background: var(--raised, #141d35); border-color: var(--subtle, #64748b); } .ds-btn:active { background: var(--sunken, #0a0e1a); } .ds-btn:focus-visible { outline: 2px solid var(--focus, #fdb74b); outline-offset: 2px; }"
+    },
+    {
+      "name": "Franchise Chip",
+      "kind": "chip",
+      "refersTo": "franchise-chip",
+      "description": "Header control: sticker thumbnail, mono prefix code, Exo name. Opens the franchise wall.",
+      "html": "<button class=\"ds-chip\" type=\"button\"><span class=\"ds-chip-art\"></span><span class=\"ds-chip-code\">ABC</span><span class=\"ds-chip-name\">Franchise Name</span><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 9l6 6l6 -6\"/></svg></button>",
+      "css": ".ds-chip { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 10px 0 4px; border: 1px solid var(--control-border, #042a52cc); border-radius: 4px; background: var(--sunken, #0a0e1a); color: var(--text, #ffffff); transition: background-color 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms cubic-bezier(0.16, 1, 0.3, 1), color 180ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-chip:hover { border-color: var(--subtle, #64748b); background: var(--raised, #141d35); } .ds-chip:focus-visible { outline: 2px solid var(--focus, #fdb74b); outline-offset: 2px; } .ds-chip-art { width: 36px; height: 36px; border-radius: 4px; background: var(--orange, #f7931e); } .ds-chip-code { padding-right: 10px; border-right: 1px solid var(--hairline, #1e293b); font: 700 0.75rem/1 \"Martian Mono\", Monaco, monospace; } .ds-chip-name { font: 700 0.9375rem/1.2 Exo, sans-serif; letter-spacing: 0.02em; } .ds-chip svg { color: var(--muted, #94a3b8); }"
+    },
+    {
+      "name": "Tool Tabs",
+      "kind": "nav",
+      "refersTo": "tab",
+      "description": "SIGN / TEXT / BACKGROUND in a sunken track; the selected tab is navy.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\"><button class=\"ds-tab\" role=\"tab\" aria-selected=\"true\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4\"/></svg>Sign</button><button class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">Text</button><button class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">Background</button></div>",
+      "css": ".ds-tabs { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--border, rgba(4, 42, 82, 0.8)); border-radius: 6px; background: var(--sunken, #0a0e1a); } .ds-tab { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 14px; border: 0; border-radius: 4px; background: transparent; color: var(--muted, #94a3b8); font: 700 0.75rem/1 Exo, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; transition: background-color 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms cubic-bezier(0.16, 1, 0.3, 1), color 180ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-tab:hover { color: var(--text, #ffffff); } .ds-tab[aria-selected=\"true\"] { background: var(--navy, #07407b); color: var(--on-navy, #ffffff); } .ds-tab:focus-visible { outline: 2px solid var(--focus, #fdb74b); outline-offset: 2px; }"
+    },
+    {
+      "name": "Layer Chip",
+      "kind": "chip",
+      "refersTo": "layer-chip",
+      "description": "Pill per signature or text layer; pressed (selected) is navy.",
+      "html": "<button class=\"ds-layer\" aria-pressed=\"true\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4\"/></svg><span>Signature 1</span></button><button class=\"ds-layer\" aria-pressed=\"false\"><span>Text</span></button>",
+      "css": ".ds-layer { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 12px 0 10px; border: 1px solid var(--control-border, #042a52cc); border-radius: 999px; background: transparent; color: var(--text-2, #f1f5f9); font: 500 0.8125rem/1 Roboto, sans-serif; transition: background-color 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms cubic-bezier(0.16, 1, 0.3, 1), color 180ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-layer:hover { border-color: var(--subtle, #64748b); background: var(--raised, #141d35); } .ds-layer[aria-pressed=\"true\"] { border-color: var(--navy, #07407b); background: var(--navy, #07407b); color: var(--on-navy, #ffffff); } .ds-layer:focus-visible { outline: 2px solid var(--focus, #fdb74b); outline-offset: 2px; }"
+    },
+    {
+      "name": "Range Slider",
+      "kind": "input",
+      "refersTo": null,
+      "description": "Layer scale, rotation and opacity: navy fill to the value, white thumb with a navy ring, mono readout.",
+      "html": "<label class=\"ds-range\"><span class=\"ds-range-label\">Size <output>120%</output></span><input type=\"range\" value=\"60\" style=\"--fill: 60%\"></label>",
+      "css": ".ds-range { display: grid; gap: 8px; width: 148px; } .ds-range-label { display: flex; justify-content: space-between; color: var(--muted, #94a3b8); font: 700 0.75rem/1 Exo, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; } .ds-range-label output { color: var(--text-2, #f1f5f9); font: 500 0.6875rem/1 \"Martian Mono\", Monaco, monospace; text-transform: none; } .ds-range input { appearance: none; -webkit-appearance: none; width: 100%; height: 20px; background: transparent; cursor: pointer; } .ds-range input::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--navy-hover, #0a5299) var(--fill), var(--track, #1e293b) var(--fill)); } .ds-range input::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: -6px; border: 2px solid var(--navy-hover, #0a5299); border-radius: 50%; background: #ffffff; } .ds-range input::-moz-range-track { height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--navy-hover, #0a5299) var(--fill), var(--track, #1e293b) var(--fill)); } .ds-range input::-moz-range-thumb { width: 12px; height: 12px; border: 2px solid var(--navy-hover, #0a5299); border-radius: 50%; background: #ffffff; } .ds-range input:focus-visible { outline: none; } .ds-range input:focus-visible::-webkit-slider-thumb { outline: 2px solid var(--focus, #fdb74b); outline-offset: 2px; }"
+    },
+    {
+      "name": "Kit Tile",
+      "kind": "card",
+      "refersTo": "kit-thumb",
+      "description": "Aspect-true live thumbnail with kerned label and mono size. Current is ringed orange; a missing asset reads \"Not made for X yet\".",
+      "html": "<div class=\"ds-kit\"><button class=\"ds-kit-tile\" data-current style=\"--ar: 1\"><span class=\"ds-kit-thumb\"></span><span class=\"ds-kit-label\">Sticker</span><span class=\"ds-kit-size\">512×512</span></button><button class=\"ds-kit-tile\" data-state=\"unavailable\" style=\"--ar: 2.5\"><span class=\"ds-kit-thumb\"><span class=\"ds-kit-state\">Not made for Franchise yet</span></span><span class=\"ds-kit-label\">Discord banner</span><span class=\"ds-kit-size\">1200×480</span></button></div>",
+      "css": ".ds-kit { display: flex; gap: 8px; width: 340px; } .ds-kit-tile { flex: var(--ar) 1 0; display: flex; flex-direction: column; gap: 7px; min-width: 0; padding: 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; } .ds-kit-thumb { position: relative; display: grid; place-items: center; width: 100%; aspect-ratio: var(--ar); border-radius: 3px; background-color: var(--check-a, #0c1222); background-image: conic-gradient(var(--check-b, #111a2e) 25%, transparent 0 50%, var(--check-b, #111a2e) 0 75%, transparent 0); background-size: 10px 10px; outline: 1px solid var(--border, rgba(4, 42, 82, 0.8)); transition: outline-color 180ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-kit-tile:hover .ds-kit-thumb { outline-color: var(--subtle, #64748b); } .ds-kit-tile:focus-visible { outline: none; } .ds-kit-tile:focus-visible .ds-kit-thumb { outline: 2px solid var(--focus, #fdb74b); outline-offset: 2px; } .ds-kit-tile[data-current] .ds-kit-thumb { outline: 2px solid var(--orange, #f7931e); outline-offset: 2px; } .ds-kit-label { color: var(--text-2, #f1f5f9); font: 700 0.6875rem/1.25 Exo, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; } .ds-kit-size { color: var(--muted, #94a3b8); font: 500 0.625rem/1 \"Martian Mono\", Monaco, monospace; } .ds-kit-tile[data-state=\"unavailable\"] { cursor: not-allowed; } .ds-kit-tile[data-state=\"unavailable\"] .ds-kit-thumb { background: var(--sunken, #0a0e1a); outline-style: dashed; outline-color: var(--border-strong, #1d3a5f); } .ds-kit-tile[data-state=\"unavailable\"] .ds-kit-label { color: var(--muted, #94a3b8); } .ds-kit-state { padding: 6px; color: var(--muted, #94a3b8); font: 400 0.6875rem/1.3 Roboto, sans-serif; text-align: center; }"
+    },
+    {
+      "name": "Franchise Wall Item",
+      "kind": "card",
+      "refersTo": "wall-item",
+      "description": "One team in the packed wall grid; the chosen franchise is ringed orange.",
+      "html": "<button class=\"ds-wall-item\" aria-current=\"true\"><span class=\"ds-wall-art\"></span><span class=\"ds-wall-code\">ABC</span><span class=\"ds-wall-name\">Franchise Name</span></button>",
+      "css": ".ds-wall-item { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 104px; padding: 10px 6px; border: 1px solid var(--border, rgba(4, 42, 82, 0.8)); border-radius: 6px; background: var(--sunken, #0a0e1a); color: var(--text, #ffffff); transition: background-color 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms cubic-bezier(0.16, 1, 0.3, 1), color 180ms cubic-bezier(0.16, 1, 0.3, 1); } .ds-wall-item:hover { border-color: var(--border-strong, #1d3a5f); background: var(--raised, #141d35); } .ds-wall-item[aria-current=\"true\"] { border-color: var(--orange, #f7931e); outline: 1px solid var(--orange, #f7931e); outline-offset: -2px; } .ds-wall-item:focus-visible, .ds-wall-item[aria-current=\"true\"]:focus-visible { outline: 2px solid var(--text, #ffffff); outline-offset: 2px; } .ds-wall-art { width: 72px; height: 72px; border-radius: 4px; background: var(--orange, #f7931e); } .ds-wall-code { font: 700 0.8125rem/1 \"Martian Mono\", Monaco, monospace; } .ds-wall-name { color: var(--muted, #94a3b8); font: 400 0.75rem/1.25 Roboto, sans-serif; text-align: center; }"
+    },
+    {
+      "name": "Selection Box",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "The selected layer on the stage: orange outline over a dark inner edge, white corner handles, round rotate handle on a stem.",
+      "html": "<div class=\"ds-stage\"><div class=\"ds-box\"><i class=\"ds-h tl\"></i><i class=\"ds-h tr\"></i><i class=\"ds-h bl\"></i><i class=\"ds-h br\"></i><i class=\"ds-h rot\"></i></div></div>",
+      "css": ".ds-stage { position: relative; width: 240px; height: 180px; background-color: var(--check-a, #0c1222); background-image: conic-gradient(var(--check-b, #111a2e) 25%, transparent 0 50%, var(--check-b, #111a2e) 0 75%, transparent 0); background-size: 16px 16px; outline: 1px solid var(--border, rgba(4, 42, 82, 0.8)); } .ds-box { position: absolute; inset: 50px 50px 40px; border: 1px solid var(--box-edge, rgba(10, 14, 26, 0.55)); outline: 1.5px solid var(--orange, #f7931e); } .ds-h { position: absolute; width: 12px; height: 12px; border: 2px solid var(--orange, #f7931e); border-radius: 2px; background: #ffffff; } .ds-h.tl { top: -7px; left: -7px; } .ds-h.tr { top: -7px; right: -7px; } .ds-h.bl { bottom: -7px; left: -7px; } .ds-h.br { bottom: -7px; right: -7px; } .ds-h.rot { top: -30px; left: 50%; border-radius: 50%; transform: translateX(-50%); } .ds-h.rot::before { content: \"\"; position: absolute; top: 100%; left: 50%; width: 1.5px; height: 15px; margin-top: 2px; background: var(--orange, #f7931e); transform: translateX(-50%); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Signing Table",
+    "overview": "**Creative North Star: \"The Signing Table\"**\n\n**Parent system: [CSC-Web DESIGN.md](https://github.com/csconfederation/CSC-Web/blob/main/DESIGN.md), the Match-Night Lobby.** It is binding. Its palette, type stack, Kerned-Label, Two-Color, Floodlight and No-Shadow rules apply here unchanged. This file records only the tokens this surface ships, its own components, and where it deliberately departs from the parent.\n\nThe surface is a tool, not a page. The franchise art is the only saturated field; the chrome is the slate stack in 1px borders, so the sticker reads first. One orange primary (Download) per screen, and orange marks what is currently selected.",
+    "keyCharacteristics": [
+      "Every color is a CSS custom property in `css/styles.css`; `[data-theme=\"light\"]` (set from CSC-Web's postMessage) swaps in the light set from CSC-Web's lobby and combine-queue values.",
+      "Flat: tonal layers and 1px borders, zero `box-shadow`.",
+      "Exo kerned labels, Roboto body, Martian Mono for sizes and prefix codes.",
+      "Desktop holds stage, tray and kit in one viewport; phones stack them.",
+      "One authored motion: the signature stamping onto the kit."
+    ],
+    "rules": [
+      {
+        "name": "The Art-Is-The-Field Rule",
+        "body": "Only the franchise art is saturated. Chrome never takes a tier, performance or extra brand color.",
+        "section": "colors"
+      },
+      {
+        "name": "The Orange-Means-Current Rule",
+        "body": "Orange appears only on Download (and its hover and press), the current-selection rings (kit tile on stage, chosen franchise, selected layer's box), focus (`focus` rings, the input border, the caret), text selection, the accent bar and warning toasts. No control but Download turns orange on hover.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mono-For-Measures Rule",
+        "body": "Pixel sizes, prefix codes and numeric readouts are Martian Mono; nothing else is.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "Do take every color from the custom properties in `css/styles.css` and add a `[data-theme=\"light\"]` value for any new one.",
+      "Do keep orange to Download, the current selection, focus and the accent bar.",
+      "Do show a missing asset as an unavailable tile (\"Not made for X yet\"), never as an error.",
+      "Do keep thumbnails aspect-true and live; keep the stage and export at exact scale.",
+      "Do put sizes, codes and readouts in Martian Mono, and labels in the Exo kerned label.",
+      "Do keep 44px touch targets under `pointer: coarse` and cut all motion under `prefers-reduced-motion`."
+    ],
+    "donts": [
+      "Don't put white text on Floodlight Orange.",
+      "Don't add `box-shadow`; use a tonal step or a stronger border.",
+      "Don't let a tool switch or the signing pad resize the stage.",
+      "Don't add a second orange button, or an orange hover on anything but Download.",
+      "Don't add motion beyond the 180ms state transitions, the 200ms wall rise and toast, the loading shimmer, the busy-icon spin and the landing stamp."
+    ]
+  }
+}
