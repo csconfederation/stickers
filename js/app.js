@@ -8,18 +8,52 @@ import {
   measureWith, resolvePlacements, topLayerAt
 } from './modules/layers.js';
 import { createState, loadSavedState, saveState } from './modules/state.js';
-import { assetLabel, assetUrl, availability, loadManifest, manifestTeams, pickAsset, thumbUrl } from './modules/assets.js';
+import { assetUrl, availability, loadManifest, manifestTeams, pickAsset, thumbUrl } from './modules/assets.js';
 import { listenForTheme } from './modules/theme.js';
-import { exportFilename, loadImage, showToast } from './modules/utils.js';
+import { clamp, exportFilename, loadImage, showToast } from './modules/utils.js';
 
 const $ = (id) => document.getElementById(id);
 const FORM_CONTROLS = 'input, select, textarea, [contenteditable]';
+// Arrow keys and Delete act on the selected layer only from these, so they never fight a tab list or the kit.
+const LAYER_KEY_SCOPE = '#canvasWrapper, #layerList, #layerBar';
 const BACKGROUND_INPUTS = {
   backgroundColor: 'solidColor',
   gradientColor1: 'gradientColor1',
   gradientColor2: 'gradientColor2'
 };
-const TEXT_INPUTS = { textInput: 'text', textColor: 'color', textOutlineColor: 'outlineColor' };
+const TEXT_INPUTS = { textColor: 'color', textOutlineColor: 'outlineColor' };
+const BACKGROUND_HINTS = {
+  [BACKGROUND_TYPES.ORIGINAL]: 'Swap the backdrop behind the sticker for a color, a gradient or nothing.',
+  [BACKGROUND_TYPES.TRANSPARENT]: 'See-through PNG. The checkerboard only shows where.'
+};
+
+// The kit sheet: which assets share a row (squares first, then wider), and each one's short label.
+const KIT_ROWS = [
+  ['Sticker', 'StickerShadow', 'SeasonTeamSticker', 'SeasonSignatureSticker'],
+  ['ProfilePicture', 'DesktopBackground', 'YoutubeBanner'],
+  ['DiscordBanner', 'TwitterBanner'],
+  ['TwitchBanner']
+];
+const KIT_LABELS = {
+  Sticker: 'Sticker',
+  StickerShadow: 'Sticker shadow',
+  SeasonTeamSticker: 'Season team',
+  SeasonSignatureSticker: 'Season signature',
+  ProfilePicture: 'Avatar',
+  DesktopBackground: 'Wallpaper',
+  YoutubeBanner: 'YouTube',
+  DiscordBanner: 'Discord',
+  TwitterBanner: 'Twitter/X',
+  TwitchBanner: 'Twitch'
+};
+const THUMB_MAX_WIDTH = 480; // THUMB_SIZE in scripts/build_assets.py
+const KIT_THROTTLE_MS = 100;
+const LAND_STAGGER_MS = 45;
+
+// Phones sign on a full-screen pad; wider screens sign over the stage.
+const sheetSigning = matchMedia('(max-width: 599px)');
+const stacked = matchMedia('(max-width: 899px)');
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 // A drawn signature is shared by every asset, so the pad is sharp enough for
 // the widest one at its default size.
@@ -32,30 +66,116 @@ const loadFonts = (layers) => Promise.all(
     .map((layer) => document.fonts.load(`${layer.font.weight} 64px "${layer.font.family}"`, layer.text).catch(() => {}))
 );
 
+function h(tag, attrs = {}, ...children) {
+  const el = document.createElement(tag);
+  for (const [name, value] of Object.entries(attrs)) {
+    if (name === 'class') el.className = value;
+    else if (value !== false && value != null) el.setAttribute(name, value === true ? '' : value);
+  }
+  el.append(...children);
+  return el;
+}
+
+function icon(name) {
+  const ns = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('class', 'icon');
+  svg.setAttribute('aria-hidden', 'true');
+  const use = document.createElementNS(ns, 'use');
+  use.setAttribute('href', `#i-${name}`);
+  svg.append(use);
+  return svg;
+}
+
+// The track fill for a range input (see input[type="range"] in css/styles.css).
+function paintRange(input) {
+  const min = Number(input.min || 0);
+  const max = Number(input.max || 100);
+  input.style.setProperty('--fill', `${(Number(input.value) - min) / (max - min) * 100}%`);
+}
+
+// Rough luminance, enough to pick a pad surface the ink shows up on.
+function isLightColor(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.6;
+}
+
+function saveBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = h('a', { href: url, download: filename });
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+// A toast with one action, for undoing a delete.
+function actionToast(message, label, onAction) {
+  const button = h('button', { type: 'button', class: 'btn', 'data-testid': 'toast-undo' }, icon('arrow-back-up'), label);
+  const toast = h('div', { class: 'toast', role: 'status' }, h('span', {}, message), button);
+  const dismiss = () => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 250);
+  };
+  button.addEventListener('click', () => {
+    onAction();
+    dismiss();
+  }, { once: true });
+  document.body.append(toast);
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(dismiss, 6000);
+}
+
 // Fires 'change' after every render, for UI built on top (kit thumbnails).
 class App extends EventTarget {
   constructor() {
     super();
     this.state = createState();
     this.manifest = {}; // { [prefix]: [file names] }
+    this.teams = []; // TEAMS that have assets, for the franchise wall
     this.available = null; // { [asset]: boolean } for the selected team
     this.thumbs = new Map(); // asset -> Promise<thumbnail image>, for the selected team
     this.requestId = 0; // lets a newer team/asset request cancel an older one
     this.gesture = null;
-    this.drawing = false;
+    this.drawing = null; // 'overlay' (pad over the stage) or 'sheet' (full-screen pad) while signing
+    this.placing = false; // true while only the current asset's placement changes
+    this.kit = new Map(); // asset -> { tile, pick, thumb, canvas, message, download }
+    this.kitFrame = 0;
+    this.kitTimer = 0;
+    this.textBound = false; // the text field shows the selected text layer
+    this.stageAction = null;
 
     this.canvas = new CanvasManager($('mainCanvas'), $('canvasWrapper'));
-    this.pad = new DrawingPad($('drawingCanvas'), () => this.readBrush());
+    this.overlayPad = new DrawingPad($('drawingCanvas'), () => this.readBrush());
+    this.sheetPad = new DrawingPad($('signPad'), () => this.readBrush());
     this.measure = measureWith(document.createElement('canvas').getContext('2d'));
-    this.sliders = [...document.querySelectorAll('.transform-controls input[type="range"]')];
+    this.sliders = [...$('layerControls').querySelectorAll('input[type="range"]')];
+    this.tabs = [...document.querySelectorAll('[role="tab"]')];
     this.canvas.setDimensions(this.assetSize.width, this.assetSize.height);
 
-    this.populateSelects();
-    this.bindControls();
+    const scale = $('scaleSlider');
+    scale.min = SCALE_LIMITS.min * 100;
+    scale.max = SCALE_LIMITS.max * 100;
+
+    this.buildKit();
+    this.bindHeader();
+    this.bindWall();
+    this.bindTabs();
+    this.bindSign();
     this.bindText();
+    this.bindBackground();
+    this.bindLayerControls();
     this.bindGestures();
     document.addEventListener('keydown', (e) => this.onKeyDown(e));
-    new ResizeObserver(() => this.syncPad()).observe($('drawingCanvas'));
+    document.addEventListener('input', (e) => {
+      if (e.target.type === 'range') paintRange(e.target);
+    });
+    for (const input of document.querySelectorAll('input[type="range"]')) paintRange(input);
+    const padObserver = new ResizeObserver(() => this.syncPads());
+    padObserver.observe($('drawingCanvas'));
+    padObserver.observe($('signPad'));
+    this.addEventListener('change', () => this.queueKit());
+    this.setTab('tabSign');
     this.init();
   }
 
@@ -78,107 +198,176 @@ class App extends EventTarget {
     return this.selected && this.placementOf(this.selected);
   }
 
+  get pad() {
+    return this.drawing === 'sheet' ? this.sheetPad : this.overlayPad;
+  }
+
+  get team() {
+    return TEAMS.find((team) => team.prefix === this.state.teamPrefix) ?? null;
+  }
+
   placementOf(layer) {
     const { layers } = this.state;
     return resolvePlacements(layers, this.assetKey, this.assetSize, this.measure)[layers.indexOf(layer)];
   }
 
-  populateSelects() {
-    $('teamSelect').append(new Option('Select a Franchise', ''));
-    for (const key of Object.keys(ASSET_TYPES)) $('assetSelect').append(new Option(assetLabel(key, null), key));
-
-    const scale = $('scaleSlider');
-    scale.min = SCALE_LIMITS.min * 100;
-    scale.max = SCALE_LIMITS.max * 100;
-  }
-
-  bindControls() {
-    $('teamSelect').addEventListener('change', (e) => this.selectTeam(e.target.value, this.state.asset));
-    $('assetSelect').addEventListener('change', (e) => this.selectAsset(e.target.value));
-
-    $('drawBtn').addEventListener('click', () => this.startDrawing());
-    $('uploadBtn').addEventListener('click', () => this.showUpload());
-    $('fileInput').addEventListener('change', (e) => this.handleUpload(e));
-
-    $('clearDrawing').addEventListener('click', () => this.pad.clear());
-    $('undoStroke').addEventListener('click', () => this.pad.undo());
-    $('doneDrawing').addEventListener('click', () => this.applyDrawing());
-    for (const id of ['brushSize', 'strokeWidth']) {
-      $(id).addEventListener('input', (e) => { $(`${id}Value`).textContent = e.target.value; });
-    }
-
-    $('backgroundType').addEventListener('change', (e) => this.setBackground({ type: e.target.value }));
-    $('gradientDirection').addEventListener('change', (e) => this.setBackground({ gradientDirection: e.target.value }));
-    for (const [id, key] of Object.entries(BACKGROUND_INPUTS)) {
-      $(id).addEventListener('input', (e) => this.setBackground({ [key]: e.target.value }));
-    }
-
-    for (const slider of this.sliders) {
-      slider.addEventListener('input', () => {
-        const { stateKey, multiplier = '1' } = slider.dataset;
-        this.setPlacement({ [stateKey]: Number(slider.value) * Number(multiplier) });
-      });
-    }
-    $('resetTransform').addEventListener('click', () => this.resetPlacement());
-    $('deleteSignature').addEventListener('click', () => this.deleteLayer());
-    $('doneTransform').addEventListener('click', () => this.select(null));
-
-    $('exportBtn').addEventListener('click', () => this.exportImage());
-  }
-
   async init() {
     const saved = loadSavedState();
     this.state.backgroundSettings = saved.backgroundSettings;
+    this.setStage('loading');
     this.syncControls();
     try {
       this.manifest = await loadManifest();
     } catch {
-      showToast('Could not load the franchise list.');
+      this.setStage('error', "Couldn't load the franchise list. Check your connection and try again.", 'Try again', () => this.init());
       return;
     }
-    for (const team of manifestTeams(this.manifest)) $('teamSelect').append(new Option(`${team.name} (${team.prefix})`, team.prefix));
-    if (this.manifest[saved.teamPrefix]) await this.selectTeam(saved.teamPrefix, saved.asset);
+    this.teams = manifestTeams(this.manifest);
+    this.buildWall();
+    if (this.teams.some((team) => team.prefix === saved.teamPrefix)) {
+      await this.selectTeam(saved.teamPrefix, saved.asset);
+    } else {
+      this.setStage('empty');
+      this.openWall();
+    }
+  }
+
+  // state is 'empty' (no franchise yet), 'loading', 'ready' or 'error'; empty and
+  // error show a message with one action.
+  setStage(state, message = '', actionLabel = '', action = null) {
+    if (state === 'empty') {
+      message = 'Pick your franchise to load its stickers, banners and wallpaper.';
+      actionLabel = 'Pick your franchise';
+      action = () => this.openWall();
+    }
+    $('stage').dataset.state = state;
+    $('stageMessage').hidden = !message;
+    $('stageMessageText').textContent = message;
+    $('stageMessageBtn').textContent = actionLabel;
+    this.stageAction = action;
+  }
+
+  bindHeader() {
+    $('franchiseChip').addEventListener('click', () => this.openWall());
+    $('downloadBtn').addEventListener('click', () => this.download(this.state.asset, $('downloadBtn')));
+    $('stageMessageBtn').addEventListener('click', () => this.stageAction?.());
+  }
+
+  // ---- Franchise wall ----------------------------------------------------
+
+  bindWall() {
+    const wall = $('franchiseWall');
+    $('wallClose').addEventListener('click', () => wall.close());
+    // A click on the backdrop targets the dialog itself, outside its box.
+    wall.addEventListener('click', (e) => {
+      if (e.target !== wall) return;
+      const r = wall.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) wall.close();
+    });
+    wall.addEventListener('close', () => $('franchiseChip').setAttribute('aria-expanded', 'false'));
+    $('wallGrid').addEventListener('click', (e) => {
+      const item = e.target.closest('.wall-item');
+      if (!item) return;
+      wall.close();
+      if (item.dataset.prefix !== this.state.teamPrefix) this.selectTeam(item.dataset.prefix, this.state.asset);
+    });
+    $('wallGrid').addEventListener('keydown', (e) => this.onWallKey(e));
+  }
+
+  buildWall() {
+    const items = this.teams.map((team) => {
+      const art = pickAsset(DEFAULT_ASSET, availability(this.manifest[team.prefix]));
+      const img = h('img', { src: thumbUrl(team.prefix, art), alt: '', width: 72, height: 72, loading: 'lazy', decoding: 'async' });
+      const frame = h('span', { class: 'wall-art' }, img);
+      img.addEventListener('load', () => frame.classList.add('is-loaded'), { once: true });
+      img.addEventListener('error', () => {
+        frame.classList.add('is-loaded');
+        img.hidden = true;
+      }, { once: true });
+      const button = h('button', {
+        type: 'button',
+        class: 'wall-item',
+        tabindex: -1,
+        'data-prefix': team.prefix,
+        'data-testid': `team-${team.prefix}`,
+        'aria-label': `${team.name} (${team.prefix})`
+      }, frame, h('span', { class: 'wall-code mono' }, team.prefix), h('span', { class: 'wall-name' }, team.name));
+      return h('li', {}, button);
+    });
+    $('wallGrid').replaceChildren(...items);
+    this.syncWall();
+  }
+
+  // Rings the current franchise and makes it the one tab stop in the grid.
+  syncWall() {
+    const items = [...$('wallGrid').querySelectorAll('.wall-item')];
+    const current = items.find((item) => item.dataset.prefix === this.state.teamPrefix);
+    for (const item of items) {
+      if (item === current) item.setAttribute('aria-current', 'true');
+      else item.removeAttribute('aria-current');
+      item.tabIndex = item === (current ?? items[0]) ? 0 : -1;
+    }
+  }
+
+  openWall() {
+    const wall = $('franchiseWall');
+    if (wall.open || this.drawing || !this.teams.length) return;
+    this.syncWall();
+    wall.showModal();
+    $('franchiseChip').setAttribute('aria-expanded', 'true');
+    // With no franchise yet the dialog's own focus (Close) stays, so no tile looks picked.
+    $('wallGrid').querySelector('.wall-item[aria-current="true"]')?.focus();
+  }
+
+  // Arrow keys walk the grid by its rendered column count.
+  onWallKey(e) {
+    const items = [...$('wallGrid').querySelectorAll('.wall-item')];
+    const index = items.indexOf(document.activeElement);
+    if (index === -1) return;
+    const columns = getComputedStyle($('wallGrid')).gridTemplateColumns.split(' ').length;
+    const target = {
+      ArrowRight: index + 1,
+      ArrowLeft: index - 1,
+      ArrowDown: index + columns,
+      ArrowUp: index - columns,
+      Home: 0,
+      End: items.length - 1
+    }[e.key];
+    if (target === undefined) return;
+    e.preventDefault();
+    const next = items[clamp(target, 0, items.length - 1)];
+    items[index].tabIndex = -1;
+    next.tabIndex = 0;
+    next.focus();
   }
 
   // ---- Background -------------------------------------------------------
 
   async selectTeam(prefix, wantedAsset) {
     const id = ++this.requestId;
-    if (!prefix) {
-      clearPlacements(this.state.layers);
-      Object.assign(this.state, { teamPrefix: null, asset: null, backgroundImage: null });
-      this.available = null;
-      this.thumbs.clear();
-      this.refresh();
-      return;
-    }
     const available = availability(this.manifest[prefix]);
     const asset = pickAsset(wantedAsset, available);
     if (!asset) {
-      showToast('No images are available for that franchise.');
-      this.syncControls();
+      showToast('Nothing has been made for that franchise yet.');
       return;
     }
     await this.showBackground(prefix, asset, available, id);
   }
 
   async selectAsset(asset) {
-    if (!asset) {
-      this.syncControls();
-      return;
-    }
     await this.showBackground(this.state.teamPrefix, asset, this.available, ++this.requestId);
   }
 
   async showBackground(prefix, asset, available, id) {
     delete $('mainCanvas').dataset.asset;
+    this.setStage('loading');
     let image;
     try {
       image = await loadImage(assetUrl(prefix, asset));
     } catch {
       if (id !== this.requestId) return;
-      showToast('Failed to load the background image.');
-      this.syncControls();
+      const retry = () => this.showBackground(prefix, asset, available, ++this.requestId);
+      this.setStage('error', `Couldn't load the ${ASSET_TYPES[asset].displayName}. Check your connection and try again.`, 'Try again', retry);
       this.syncStageAsset();
       return;
     }
@@ -188,11 +377,14 @@ class App extends EventTarget {
       // what was drawn on the blank stage.
       if (this.state.teamPrefix) clearPlacements(this.state.layers);
       this.thumbs.clear();
+      this.clearKit();
     }
     Object.assign(this.state, { teamPrefix: prefix, asset, backgroundImage: image });
     this.available = available;
     this.canvas.setDimensions(ASSET_TYPES[asset].width, ASSET_TYPES[asset].height);
+    this.setStage('ready');
     this.refresh();
+    this.syncPads();
   }
 
   setBackground(change) {
@@ -200,36 +392,151 @@ class App extends EventTarget {
     this.refresh();
   }
 
+  bindBackground() {
+    for (const radio of document.querySelectorAll('input[name="backgroundType"]')) {
+      radio.addEventListener('change', () => this.setBackground({ type: radio.value }));
+    }
+    $('gradientDirection').addEventListener('change', (e) => this.setBackground({ gradientDirection: e.target.value }));
+    for (const [id, key] of Object.entries(BACKGROUND_INPUTS)) {
+      $(id).addEventListener('input', (e) => this.setBackground({ [key]: e.target.value }));
+    }
+  }
+
+  syncBackground() {
+    const bg = this.state.backgroundSettings;
+    for (const radio of document.querySelectorAll('input[name="backgroundType"]')) radio.checked = radio.value === bg.type;
+    $('backgroundColor').value = bg.solidColor;
+    $('gradientColor1').value = bg.gradientColor1;
+    $('gradientColor2').value = bg.gradientColor2;
+    $('gradientDirection').value = bg.gradientDirection;
+    $('solidColorGroup').hidden = bg.type !== BACKGROUND_TYPES.SOLID;
+    $('gradientGroup').hidden = bg.type !== BACKGROUND_TYPES.GRADIENT;
+    $('bgHint').hidden = !BACKGROUND_HINTS[bg.type];
+    $('bgHint').textContent = BACKGROUND_HINTS[bg.type] ?? '';
+  }
+
+  // ---- Tool tabs ----------------------------------------------------------
+
+  bindTabs() {
+    for (const tab of this.tabs) tab.addEventListener('click', () => this.setTab(tab.id));
+    $('tabSign').parentElement.addEventListener('keydown', (e) => {
+      const visible = this.tabs.filter((tab) => !tab.hidden);
+      const index = visible.indexOf(document.activeElement);
+      const target = { ArrowRight: index + 1, ArrowLeft: index - 1, Home: 0, End: visible.length - 1 }[e.key];
+      if (index === -1 || target === undefined) return;
+      e.preventDefault();
+      const next = visible[(target + visible.length) % visible.length];
+      this.setTab(next.id);
+      next.focus();
+    });
+  }
+
+  get activeTab() {
+    return this.tabs.find((tab) => tab.getAttribute('aria-selected') === 'true')?.id;
+  }
+
+  setTab(id) {
+    for (const tab of this.tabs) {
+      const on = tab.id === id;
+      tab.setAttribute('aria-selected', String(on));
+      tab.tabIndex = on ? 0 : -1;
+      $(tab.dataset.panel).classList.toggle('is-off', !on);
+    }
+  }
+
+  // Shows the tab that edits a layer's content when it gets picked.
+  revealTool(layer) {
+    if (layer?.kind === 'text') this.setTab('tabText');
+    else if (layer && this.activeTab === 'tabText') this.setTab('tabSign');
+  }
+
   // ---- Signature: drawing and upload ------------------------------------
 
+  bindSign() {
+    $('drawBtn').addEventListener('click', () => this.startDrawing());
+    $('uploadBtn').addEventListener('click', () => $('fileInput').click());
+    $('fileInput').addEventListener('change', (e) => this.handleUpload(e));
+
+    $('undoStroke').addEventListener('click', () => {
+      this.pad.undo();
+      this.syncSignActions();
+    });
+    $('clearDrawing').addEventListener('click', () => {
+      this.pad.clear();
+      this.syncSignActions();
+    });
+    $('cancelDrawing').addEventListener('click', () => this.stopDrawing());
+    $('applyDrawing').addEventListener('click', () => this.applyDrawing());
+    // Esc on the full-screen pad cancels signing.
+    $('signView').addEventListener('cancel', (e) => {
+      e.preventDefault();
+      this.stopDrawing();
+    });
+    for (const pad of [this.overlayPad, this.sheetPad]) {
+      for (const type of ['pointerup', 'pointercancel']) pad.canvas.addEventListener(type, () => this.syncSignActions());
+    }
+    for (const id of ['brushSize', 'strokeWidth']) {
+      $(id).addEventListener('input', (e) => { $(`${id}Value`).textContent = e.target.value; });
+    }
+    $('brushColor').addEventListener('input', () => this.syncPaper());
+  }
+
   startDrawing() {
-    this.drawing = true;
+    if (this.drawing) return;
     this.select(null);
+    this.drawing = sheetSigning.matches ? 'sheet' : 'overlay';
+    this.pad.clear();
+    if (this.drawing === 'sheet') $('signView').showModal();
+    else $('signView').show();
     this.syncDrawingUI();
-    this.syncPad();
+    this.syncPads();
+    this.syncPaper();
   }
 
   stopDrawing() {
-    this.drawing = false;
+    if (!this.drawing) return;
     this.pad.clear();
+    this.drawing = null;
+    $('signView').close();
     this.syncDrawingUI();
+    $('drawBtn').focus();
   }
 
+  // While signing, nothing may resize the stage under the pad: that would stretch the ink.
   syncDrawingUI() {
-    $('drawingTools').classList.toggle('active', this.drawing);
-    $('drawingCanvas').classList.toggle('active', this.drawing);
-    $('canvasWrapper').classList.toggle('drawing-mode', this.drawing);
-    $('drawingModeTooltip').classList.toggle('hidden', !this.drawing);
-    if (this.drawing) $('uploadWrapper').classList.add('hidden');
+    const overlay = this.drawing === 'overlay';
+    const locked = Boolean(this.drawing);
+    $('panelSign').classList.toggle('is-drawing', locked);
+    $('canvasWrapper').classList.toggle('drawing-mode', overlay);
+    $('drawingCanvas').classList.toggle('active', overlay);
+    for (const el of [$('kit'), document.querySelector('.tray-head'), $('layerBar')]) el.inert = locked;
+    $('franchiseChip').disabled = locked;
+    this.syncDownload();
+    this.syncSignActions();
+    this.syncStageHint();
   }
 
-  // The pad overlays the stage, so it follows the stage's displayed size.
-  syncPad() {
-    const { width, height } = $('drawingCanvas').getBoundingClientRect();
-    if (!width || !height) return;
-    // At least the stage's own pixel width too, so it isn't upscaled on the asset it was drawn on.
-    const minWidth = Math.max(PAD_SHARED_BITMAP_WIDTH, this.assetSize.width);
-    this.pad.resize(width, height, padPixelRatio(width, height, devicePixelRatio, minWidth));
+  syncSignActions() {
+    const empty = !this.drawing || this.pad.isEmpty;
+    for (const id of ['undoStroke', 'clearDrawing', 'applyDrawing']) $(id).disabled = empty;
+  }
+
+  // Each pad follows its displayed size. The stage pad keeps at least the asset's own
+  // width too, so the signature isn't upscaled on the asset it was drawn on.
+  syncPads() {
+    const pads = [
+      [this.overlayPad, Math.max(PAD_SHARED_BITMAP_WIDTH, this.assetSize.width)],
+      [this.sheetPad, PAD_SHARED_BITMAP_WIDTH]
+    ];
+    for (const [pad, minWidth] of pads) {
+      const { width, height } = pad.canvas.getBoundingClientRect();
+      if (width && height) pad.resize(width, height, padPixelRatio(width, height, devicePixelRatio, minWidth));
+    }
+  }
+
+  // Light ink gets a dark sheet, so the default black and a white pen both show.
+  syncPaper() {
+    $('signPaper').dataset.ink = isLightColor($('brushColor').value) ? 'light' : 'dark';
   }
 
   readBrush() {
@@ -243,20 +550,15 @@ class App extends EventTarget {
 
   applyDrawing() {
     const capture = this.pad.capture();
-    if (!capture) {
-      showToast('Draw your signature first.', 'warning');
-      return;
+    if (!capture) return;
+    const layer = createSignatureLayer(capture.image);
+    // Drawn over the stage, it starts where it was drawn on this asset; every other
+    // asset, and the full-screen pad, use the default placement.
+    if (this.drawing === 'overlay') {
+      layer.origins[this.assetKey] = normalizeTransform(padPlacement(capture, this.assetSize), this.assetSize);
     }
     this.stopDrawing();
-    // Drawn over the stage, so it starts where it was drawn on this asset; every other asset uses the default.
-    const layer = createSignatureLayer(capture.image);
-    layer.origins[this.assetKey] = normalizeTransform(padPlacement(capture, this.assetSize), this.assetSize);
-    this.addLayer(layer);
-  }
-
-  showUpload() {
-    if (this.drawing) this.stopDrawing();
-    $('uploadWrapper').classList.remove('hidden');
+    this.addLayer(layer, { land: true });
   }
 
   async handleUpload(e) {
@@ -270,10 +572,9 @@ class App extends EventTarget {
     }
     const url = URL.createObjectURL(file);
     try {
-      this.addLayer(createSignatureLayer(await loadImage(url)));
-      $('uploadWrapper').classList.add('hidden');
+      this.addLayer(createSignatureLayer(await loadImage(url)), { land: true });
     } catch {
-      showToast('Could not read that image.');
+      showToast("Couldn't read that image. Try a PNG or a JPEG.");
     } finally {
       URL.revokeObjectURL(url);
     }
@@ -281,15 +582,24 @@ class App extends EventTarget {
 
   // ---- Layers -----------------------------------------------------------
 
-  addLayer(layer) {
+  addLayer(layer, { land = false } = {}) {
+    const before = land ? this.snapshotKit() : null;
     this.state.layers.push(layer);
     this.select(layer.id);
     this.render();
+    if (before) this.landOnKit(layer, before);
+  }
+
+  layerName(layer) {
+    if (layer.kind === 'text') return layer.text.trim() || 'Text';
+    const signatures = this.state.layers.filter((l) => l.kind === 'signature');
+    return signatures.length > 1 ? `Signature ${signatures.indexOf(layer) + 1}` : 'Signature';
   }
 
   async addText() {
+    const typed = this.selected?.kind === 'text' ? '' : $('textInput').value.trim();
     const layer = createTextLayer({
-      text: 'Your Name',
+      text: typed || 'Your Name',
       color: $('textColor').value,
       outlineColor: $('textOutlineColor').value,
       outlineWidth: Number($('textOutlineWidth').value)
@@ -302,6 +612,13 @@ class App extends EventTarget {
 
   bindText() {
     $('addTextBtn').addEventListener('click', () => this.addText());
+    $('textInput').addEventListener('input', (e) => this.editText({ text: e.target.value }));
+    $('textInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && this.selected?.kind !== 'text') {
+        e.preventDefault();
+        this.addText();
+      }
+    });
     for (const [id, key] of Object.entries(TEXT_INPUTS)) {
       $(id).addEventListener('input', (e) => this.editText({ [key]: e.target.value }));
     }
@@ -316,7 +633,10 @@ class App extends EventTarget {
     const layer = this.selected;
     if (layer?.kind !== 'text') return;
     Object.assign(layer, change);
-    if ('text' in change) await loadFonts([layer]); // new characters may need another font subset
+    if ('text' in change) {
+      await loadFonts([layer]); // new characters may need another font subset
+      this.syncLayerList();
+    }
     this.syncLayer();
     this.render();
   }
@@ -325,14 +645,27 @@ class App extends EventTarget {
     this.state.selectedId = id;
     this.syncTextControls();
     this.syncLayer();
+    this.syncLayerList();
+    this.syncStageHint();
   }
 
+  // Deletes at once; the toast's Undo puts the layer back where it was.
   deleteLayer() {
     const layer = this.selected;
-    if (!layer || !confirm('Delete the selected layer?')) return;
-    this.state.layers = this.state.layers.filter((l) => l !== layer);
+    if (!layer) return;
+    const name = this.layerName(layer);
+    const index = this.state.layers.indexOf(layer);
+    const prefix = this.state.teamPrefix;
+    this.state.layers.splice(index, 1);
     this.select(null);
     this.render();
+    actionToast(`${name} deleted.`, 'Undo', () => {
+      if (this.state.layers.includes(layer)) return;
+      if (this.state.teamPrefix !== prefix) clearPlacements([layer]); // they were for the other team's assets
+      this.state.layers.splice(Math.min(index, this.state.layers.length), 0, layer);
+      this.select(layer.id);
+      this.render();
+    });
   }
 
   // Changes the selected layer's placement on the current asset only.
@@ -341,7 +674,9 @@ class App extends EventTarget {
     if (!layer) return;
     layer.placements = editPlacement(layer.placements, this.assetKey, this.placementOf(layer), change, this.assetSize);
     this.syncLayer();
+    this.placing = true;
     this.render();
+    this.placing = false;
   }
 
   // Drops the manual placement so the asset falls back to where the signature was drawn, or its default.
@@ -351,13 +686,33 @@ class App extends EventTarget {
     const { [this.assetKey]: removed, ...rest } = layer.placements;
     layer.placements = rest;
     this.syncLayer();
+    this.placing = true;
     this.render();
+    this.placing = false;
   }
 
-  // Brings sliders, labels, the selection box and section visibility in line with the selection.
+  bindLayerControls() {
+    for (const slider of this.sliders) {
+      slider.addEventListener('input', () => {
+        const { stateKey, multiplier = '1' } = slider.dataset;
+        this.setPlacement({ [stateKey]: Number(slider.value) * Number(multiplier) });
+      });
+    }
+    $('resetTransform').addEventListener('click', () => this.resetPlacement());
+    $('deleteSignature').addEventListener('click', () => this.deleteLayer());
+    $('doneTransform').addEventListener('click', () => this.select(null));
+    $('layerList').addEventListener('click', (e) => {
+      const chip = e.target.closest('.layer-chip');
+      if (!chip) return;
+      this.select(chip.dataset.layer);
+      this.revealTool(this.selected);
+    });
+  }
+
+  // Brings sliders, labels and the selection box in line with the selection.
   syncLayer() {
     const layer = this.selected;
-    $('transformSection').classList.toggle('hidden', !layer);
+    $('layerBar').classList.toggle('has-selection', layer !== null);
     $('signatureBox').classList.toggle('active', layer !== null);
     if (!layer) return;
 
@@ -366,7 +721,8 @@ class App extends EventTarget {
       const { stateKey, unit = '', multiplier = '1' } = slider.dataset;
       const value = placement[stateKey] / Number(multiplier);
       slider.value = value;
-      slider.nextElementSibling.textContent = `${Math.round(value)}${unit}`;
+      paintRange(slider);
+      slider.closest('.field').querySelector('output').textContent = `${Math.round(value)}${unit}`;
     }
 
     const box = boxStyle(placement, layerSize(layer, this.measure), this.assetSize);
@@ -379,16 +735,48 @@ class App extends EventTarget {
     });
   }
 
+  // One chip per layer. Chips are reused, so a focused chip keeps focus across updates.
+  syncLayerList() {
+    const list = $('layerList');
+    const { layers, selectedId } = this.state;
+    const current = [...list.querySelectorAll('.layer-chip')];
+    const chips = layers.map((layer) => {
+      const chip = current.find((c) => c.dataset.layer === layer.id) ?? h('button', {
+        type: 'button',
+        class: 'layer-chip',
+        'data-testid': 'layer-chip',
+        'data-layer': layer.id
+      }, icon(layer.kind === 'text' ? 'typography' : 'signature'), h('span'));
+      chip.setAttribute('aria-pressed', String(layer.id === selectedId));
+      chip.lastChild.textContent = this.layerName(layer);
+      return chip;
+    });
+    if (chips.length !== current.length || chips.some((chip, i) => chip !== current[i])) {
+      list.replaceChildren(...(chips.length ? [h('span', { class: 'label layers-label' }, 'Layers'), ...chips] : []));
+    }
+  }
+
   syncTextControls() {
     const layer = this.selected;
-    const text = layer?.kind === 'text' ? layer : null;
-    $('textInput').disabled = !text;
-    if (!text) return;
-    $('textInput').value = text.text;
-    $('textColor').value = text.color;
-    $('textOutlineColor').value = text.outlineColor;
-    $('textOutlineWidth').value = text.outlineWidth;
-    $('textOutlineWidthValue').textContent = text.outlineWidth;
+    if (layer?.kind === 'text') {
+      $('textInput').value = layer.text;
+      $('textColor').value = layer.color;
+      $('textOutlineColor').value = layer.outlineColor;
+      $('textOutlineWidth').value = layer.outlineWidth;
+      $('textOutlineWidthValue').textContent = layer.outlineWidth;
+      paintRange($('textOutlineWidth'));
+      this.textBound = true;
+    } else if (this.textBound) {
+      $('textInput').value = ''; // it was showing the layer that just lost the selection
+      this.textBound = false;
+    }
+  }
+
+  syncStageHint() {
+    let hint = '';
+    if (this.drawing === 'overlay') hint = 'Sign anywhere on the art, then Apply.';
+    else if (this.selected) hint = 'Drag to move. Corners scale, the top handle rotates, arrow keys nudge.';
+    $('stageHint').textContent = hint;
   }
 
   // ---- Pointer and keyboard ---------------------------------------------
@@ -409,12 +797,19 @@ class App extends EventTarget {
     }
   }
 
-  // Pressing on a layer selects the topmost one there and starts dragging it in one gesture.
+  // Pressing on a layer selects the topmost one there and starts dragging it in one
+  // gesture; pressing on empty art drops the selection.
   onCanvasDown(e) {
-    if (this.drawing) return;
+    if (this.drawing || !isPrimaryPress(e)) return;
     const hit = topLayerAt(this.state.layers, this.canvas.pointFromEvent(e), this.assetKey, this.assetSize, this.measure);
-    if (!hit) return;
-    this.select(hit.id);
+    if (!hit) {
+      if (this.selected) this.select(null);
+      return;
+    }
+    if (hit !== this.selected) {
+      this.select(hit.id);
+      this.revealTool(hit);
+    }
     this.beginGesture(e, 'drag');
   }
 
@@ -447,14 +842,22 @@ class App extends EventTarget {
   }
 
   onKeyDown(e) {
+    if ($('franchiseWall').open) return;
     const mod = e.ctrlKey || e.metaKey;
-    if (mod && e.key.toLowerCase() === 'e') {
+    const key = e.key.toLowerCase();
+    if (mod && key === 'e') {
       e.preventDefault();
-      this.exportImage();
-    } else if (mod && e.key.toLowerCase() === 'z' && !e.shiftKey && this.drawing) {
-      e.preventDefault();
-      this.pad.undo();
-    } else if (this.selected && !mod && !e.altKey && !e.target.closest(FORM_CONTROLS)) {
+      this.download(this.state.asset, $('downloadBtn'));
+    } else if (this.drawing) {
+      if (mod && key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        this.pad.undo();
+        this.syncSignActions();
+      } else if (e.key === 'Escape' && this.drawing === 'overlay') {
+        this.stopDrawing();
+      }
+    } else if (this.selected && !mod && !e.altKey && !e.target.closest(FORM_CONTROLS)
+      && (e.target === document.body || e.target.closest(LAYER_KEY_SCOPE))) {
       this.onSelectedKey(e);
     }
   }
@@ -474,6 +877,8 @@ class App extends EventTarget {
     } else if (e.key === 'Delete' || e.key === 'Backspace') {
       e.preventDefault();
       this.deleteLayer();
+    } else if (e.key === 'Escape') {
+      this.select(null);
     }
   }
 
@@ -494,6 +899,8 @@ class App extends EventTarget {
 
   render() {
     this.canvas.render(this.scene(this.assetKey, this.state.backgroundImage));
+    this.syncCanvasLabel();
+    this.syncKitNote();
     this.dispatchEvent(new Event('change'));
   }
 
@@ -515,32 +922,59 @@ class App extends EventTarget {
   }
 
   syncControls() {
-    const { teamPrefix, asset, backgroundImage, backgroundSettings: bg } = this.state;
-    $('teamSelect').value = teamPrefix ?? '';
+    const team = this.team;
+    $('chipCode').hidden = !team;
+    $('chipCode').textContent = team?.prefix ?? '';
+    $('chipName').textContent = team?.name ?? 'Pick your franchise';
+    $('franchiseChip').setAttribute('aria-label', team ? `${team.name} (${team.prefix}). Change franchise` : 'Pick your franchise');
+    this.syncChipArt();
 
-    const assetSelect = $('assetSelect');
-    assetSelect.disabled = !teamPrefix;
-    for (const option of assetSelect.options) {
-      if (!option.value) continue;
-      option.textContent = assetLabel(option.value, this.available);
-      option.disabled = this.available !== null && !this.available[option.value];
-    }
-    assetSelect.value = asset ?? '';
+    const { displayName, width, height, customBackground } = ASSET_TYPES[this.assetKey];
+    $('stageLabel').textContent = displayName;
+    $('stageSize').textContent = `${width}×${height}`;
+    $('tabBackground').hidden = !team || !customBackground;
+    if ($('tabBackground').hidden && this.activeTab === 'tabBackground') this.setTab('tabSign');
 
-    $('backgroundSection').classList.toggle('hidden', !ASSET_TYPES[asset]?.customBackground);
-    $('backgroundType').value = bg.type;
-    $('backgroundColor').value = bg.solidColor;
-    $('gradientColor1').value = bg.gradientColor1;
-    $('gradientColor2').value = bg.gradientColor2;
-    $('gradientDirection').value = bg.gradientDirection;
-    $('solidColorGroup').classList.toggle('hidden', bg.type !== BACKGROUND_TYPES.SOLID);
-    $('gradientGroup').classList.toggle('hidden', bg.type !== BACKGROUND_TYPES.GRADIENT);
-
-    $('exportBtn').disabled = !backgroundImage;
+    this.syncBackground();
+    this.syncDownload();
+    this.syncKit();
+    this.syncWall();
     this.syncLayer();
   }
 
-  // ---- Kit: every asset of the team, signed ------------------------------
+  syncChipArt() {
+    const prefix = this.state.teamPrefix ?? '';
+    const art = $('chipArt');
+    if (art.dataset.prefix === prefix) return;
+    art.dataset.prefix = prefix;
+    if (!prefix) {
+      art.replaceChildren(icon('layout-grid'));
+      return;
+    }
+    art.replaceChildren(h('img', { src: thumbUrl(prefix, pickAsset(DEFAULT_ASSET, this.available)), alt: '', width: 36, height: 36 }));
+  }
+
+  syncDownload() {
+    const button = $('downloadBtn');
+    const ready = Boolean(this.state.backgroundImage) && !this.drawing;
+    const { displayName, width, height } = ASSET_TYPES[this.assetKey];
+    button.disabled = !ready;
+    button.setAttribute('aria-label', `Download the ${displayName}, ${width}×${height} PNG`);
+    button.title = ready ? `${displayName}, ${width}×${height} PNG` : '';
+  }
+
+  syncCanvasLabel() {
+    const { layers } = this.state;
+    const count = (kind) => layers.filter((layer) => layer.kind === kind).length;
+    const signatures = count('signature');
+    const texts = count('text');
+    const parts = [this.team ? `${this.team.name} ${ASSET_TYPES[this.assetKey].displayName}` : 'Blank sticker'];
+    if (signatures) parts.push(`${signatures} signature${signatures > 1 ? 's' : ''}`);
+    if (texts) parts.push(`${texts} text layer${texts > 1 ? 's' : ''}`);
+    const label = parts.join(', ');
+    const canvas = $('mainCanvas');
+    if (canvas.getAttribute('aria-label') !== label) canvas.setAttribute('aria-label', label);
+  }
 
   // PNG blob of one asset at its export size, with every layer on it. Loads the
   // asset's full-size image unless it is the one on the stage.
@@ -570,24 +1004,202 @@ class App extends EventTarget {
     renderComposite(canvas.getContext('2d'), { ...scene, scale: canvas.width / scene.assetSize.width });
   }
 
-  async exportImage() {
-    const { teamPrefix, asset } = this.state;
-    if (!asset) return;
-    const blob = await this.exportAsset(asset);
-    if (!blob) {
-      showToast('Export failed.');
-      return;
+  // Downloads one asset; button shows a busy state while a full-size image loads.
+  async download(assetKey, button) {
+    if (!assetKey || !this.available?.[assetKey] || this.drawing || button?.getAttribute('aria-busy') === 'true') return;
+    const { displayName } = ASSET_TYPES[assetKey];
+    const use = button?.querySelector('use');
+    button?.setAttribute('aria-busy', 'true');
+    use?.setAttribute('href', '#i-loader-2');
+    try {
+      const blob = await this.exportAsset(assetKey);
+      if (!blob) throw new Error('no image');
+      saveBlob(blob, exportFilename(this.state.teamPrefix, this.team.name, assetKey));
+      showToast(`${displayName} downloaded.`, 'success');
+    } catch {
+      showToast(`Couldn't make the ${displayName} PNG. Try again.`);
+    } finally {
+      button?.removeAttribute('aria-busy');
+      use?.setAttribute('href', '#i-download');
     }
-    const teamName = TEAMS.find((team) => team.prefix === teamPrefix).name;
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = exportFilename(teamPrefix, teamName, asset);
-    document.body.append(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-    showToast('Image exported.', 'success');
+  }
+
+  // ---- The kit: every asset of the team, signed ---------------------------
+
+  buildKit() {
+    const resize = new ResizeObserver((entries) => {
+      for (const entry of entries) this.sizeThumb(entry.target.closest('.kit-tile').dataset.asset);
+    });
+    const rows = KIT_ROWS.map((keys, i) => h('div', { class: `kit-row kit-row-${i + 1}` }, ...keys.map((key) => {
+      const tile = this.buildTile(key);
+      resize.observe(this.kit.get(key).thumb);
+      return tile;
+    })));
+    $('kitSheet').replaceChildren(...rows);
+  }
+
+  buildTile(key) {
+    const { width, height, displayName } = ASSET_TYPES[key];
+    const canvas = h('canvas', { width: 0, height: 0 });
+    const message = h('span', { class: 'kit-state' });
+    const thumb = h('span', { class: 'kit-thumb' }, canvas, message);
+    const pick = h('button', { type: 'button', class: 'kit-pick', 'data-testid': `asset-${key}`, title: displayName },
+      thumb,
+      h('span', { class: 'kit-label' }, KIT_LABELS[key]),
+      h('span', { class: 'visually-hidden' }, `, ${width} by ${height}`));
+    const download = h('button', {
+      type: 'button',
+      class: 'icon-btn kit-dl',
+      'data-testid': `download-${key}`,
+      'aria-label': `Download the ${displayName}`,
+      title: `Download the ${displayName}`
+    }, icon('download'));
+    const tile = h('div', { class: 'kit-tile', 'data-asset': key, 'data-state': 'empty', style: `--ar: ${width / height}` },
+      pick,
+      h('div', { class: 'kit-foot' }, h('span', { class: 'kit-size mono' }, `${width}×${height}`), download));
+    pick.addEventListener('click', () => this.chooseAsset(key));
+    download.addEventListener('click', () => this.download(key, download));
+    this.kit.set(key, { tile, pick, thumb, canvas, message, download });
+    return tile;
+  }
+
+  chooseAsset(key) {
+    if (!this.available?.[key] || key === this.state.asset) return;
+    this.selectAsset(key);
+    // In the stacked layout the stage may be scrolled away from the kit strip.
+    if (stacked.matches) $('stage').scrollIntoView({ block: 'nearest', behavior: reducedMotion.matches ? 'auto' : 'smooth' });
+  }
+
+  // Thumbnail canvases match their displayed size, up to the thumbnail files' own width.
+  sizeThumb(key) {
+    const { thumb, canvas } = this.kit.get(key);
+    const { width, height } = ASSET_TYPES[key];
+    const px = Math.min(THUMB_MAX_WIDTH, Math.round(thumb.clientWidth * devicePixelRatio));
+    if (!px || canvas.width === px) return;
+    canvas.width = px;
+    canvas.height = Math.round(px * height / width);
+    this.drawTile(key);
+  }
+
+  clearKit() {
+    for (const { tile, canvas } of this.kit.values()) {
+      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+      tile.dataset.state = 'empty';
+    }
+  }
+
+  // Availability, the current ring and each tile's state. Drawing sets ready or error.
+  syncKit() {
+    const { teamPrefix, asset } = this.state;
+    let count = 0;
+    for (const [key, { tile, pick, message, download }] of this.kit) {
+      const available = Boolean(this.available?.[key]);
+      if (available) count++;
+      let state = tile.dataset.state;
+      if (!teamPrefix) state = 'empty';
+      else if (!available) state = 'unavailable';
+      else if (state === 'empty' || state === 'unavailable') state = 'loading';
+      tile.dataset.state = state;
+      if (state === 'unavailable') message.textContent = `Not made for ${this.team.name} yet`;
+
+      const current = Boolean(teamPrefix) && key === asset;
+      tile.toggleAttribute('data-current', current);
+      if (current) pick.setAttribute('aria-current', 'true');
+      else pick.removeAttribute('aria-current');
+      pick.setAttribute('aria-disabled', String(!available));
+      download.hidden = !available;
+    }
+    $('kitCount').textContent = teamPrefix ? `${count} of ${this.kit.size}` : '';
+    this.syncKitNote();
+  }
+
+  syncKitNote() {
+    let note = 'Pick your franchise and the whole kit shows up here.';
+    if (this.state.teamPrefix) {
+      note = this.state.layers.length
+        ? 'Live on every asset. Pick one to fine-tune it there.'
+        : 'Sign once, it lands on every asset.';
+    }
+    if ($('kitNote').textContent !== note) $('kitNote').textContent = note;
+  }
+
+  // The current asset's tile follows every frame; the rest redraw at most every
+  // KIT_THROTTLE_MS, and not at all while only the current asset's placement changes.
+  queueKit() {
+    if (!this.state.teamPrefix) return;
+    this.kitFrame ||= requestAnimationFrame(() => {
+      this.kitFrame = 0;
+      this.drawTile(this.state.asset);
+    });
+    if (this.placing) return;
+    this.kitTimer ||= setTimeout(() => {
+      this.kitTimer = 0;
+      this.drawKit();
+    }, KIT_THROTTLE_MS);
+  }
+
+  drawKit() {
+    for (const key of this.kit.keys()) this.drawTile(key);
+  }
+
+  drawTile(key) {
+    const entry = this.kit.get(key);
+    if (!entry || !this.available?.[key] || !entry.canvas.width) return;
+    const prefix = this.state.teamPrefix;
+    this.renderThumb(entry.canvas, key).then(() => {
+      if (prefix === this.state.teamPrefix) entry.tile.dataset.state = 'ready';
+    }, () => {
+      if (prefix !== this.state.teamPrefix) return;
+      entry.tile.dataset.state = 'error';
+      entry.message.textContent = "Preview didn't load";
+    });
+  }
+
+  // Copies of the drawn tiles as they are before a new signature lands.
+  snapshotKit() {
+    if (reducedMotion.matches || !this.state.teamPrefix) return null;
+    const shots = new Map();
+    for (const [key, { tile, canvas }] of this.kit) {
+      if (tile.dataset.state !== 'ready' || !canvas.width) continue;
+      const copy = h('canvas', { width: canvas.width, height: canvas.height });
+      copy.getContext('2d').drawImage(canvas, 0, 0);
+      shots.set(key, copy);
+    }
+    return shots;
+  }
+
+  // The one authored moment: a new signature stamps onto every tile of the kit in
+  // turn. Each tile shows its old picture with only the new layer animating over
+  // it, then the overlay goes and the redrawn tile underneath matches it.
+  landOnKit(layer, shots) {
+    const { layers, backgroundSettings } = this.state;
+    const index = layers.indexOf(layer);
+    let order = 0;
+    for (const [key, before] of shots) {
+      const size = ASSET_TYPES[key];
+      const placement = resolvePlacements(layers, key, size, this.measure)[index];
+      const stamp = h('canvas', { width: before.width, height: before.height });
+      renderComposite(stamp.getContext('2d'), {
+        image: null,
+        assetSize: size,
+        backgroundSettings,
+        customBackground: false,
+        layers: [{ ...layer, placements: { [key]: placement } }],
+        assetKey: key,
+        scale: stamp.width / size.width
+      });
+      stamp.style.transformOrigin = `${placement.x / size.width * 100}% ${placement.y / size.height * 100}%`;
+      const overlay = h('span', { class: 'kit-landing', 'aria-hidden': 'true' }, before, stamp);
+      this.kit.get(key).thumb.append(overlay);
+      const remove = () => overlay.remove();
+      stamp.animate(
+        [
+          { opacity: 0, transform: 'scale(1.8)', filter: 'blur(4px)' },
+          { opacity: 1, transform: 'none', filter: 'none' }
+        ],
+        { duration: 460, delay: order++ * LAND_STAGGER_MS, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', fill: 'backwards' }
+      ).finished.then(remove, remove);
+    }
   }
 }
 
