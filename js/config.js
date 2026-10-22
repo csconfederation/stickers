@@ -107,7 +107,10 @@ export const DEFAULT_STATE = {
 // Used by both the scale slider and the corner handles.
 export const SCALE_LIMITS = { min: 0.1, max: 5 };
 
+// maxSide caps an upload's longer side (the widest export), so at the smallest
+// scale (SCALE_LIMITS.min) it fits every asset.
 export const UPLOAD = {
   maxBytes: 10 * 1024 * 1024,
+  maxSide: 2560,
   types: ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/bmp']
 };
