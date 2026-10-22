@@ -110,6 +110,37 @@ describe('defaultPlacement: text', () => {
   });
 });
 
+describe('defaultPlacement: inside the asset', () => {
+  const inside = (p, size, a) => {
+    const w = size.width * p.scale / 2;
+    const h = size.height * p.scale / 2;
+    return p.x - w >= -1e-6 && p.x + w <= a.width + 1e-6 && p.y - h >= -1e-6 && p.y + h <= a.height + 1e-6;
+  };
+
+  test('a flat signature near the right edge of a wide asset moves left to fit', () => {
+    const size = { width: 3000, height: 60 };
+    const p = defaultPlacement('signature', size, wide);
+    expect(inside(p, size, wide)).toBe(true);
+    expect(p.x).toBeLessThan(PLACEMENT.wideCenterX * wide.width);
+  });
+
+  test('long text on a wide asset stays inside', () => {
+    const size = { width: 4000, height: 120 };
+    expect(inside(defaultPlacement('text', size, wide, 0, { width: 3000, height: 60 }), size, wide)).toBe(true);
+  });
+
+  test('text stays centered under a signature that moved to fit', () => {
+    const signatureSize = { width: 3000, height: 60 };
+    const signature = defaultPlacement('signature', signatureSize, wide);
+    expect(defaultPlacement('text', { width: 400, height: 120 }, wide, 0, signatureSize).x).toBe(signature.x);
+  });
+
+  test('a layer too big even at the smallest scale is centered', () => {
+    const p = defaultPlacement('signature', { width: 90000, height: 90000 }, square);
+    expect([p.x, p.y]).toEqual([256, 256]);
+  });
+});
+
 describe('defaultPlacement: hints', () => {
   test('centerX and centerY pin the signature; other hints override PLACEMENT', () => {
     const p = defaultPlacement('signature', { width: 400, height: 100 }, square, 0, null, { centerX: 0.5, centerY: 0.6, signatureMaxWidth: 0.4 });
@@ -231,8 +262,12 @@ describe('placements per asset', () => {
       return p.x - w >= -1e-6 && p.x + w <= a.width + 1e-6 && p.y - h >= -1e-6 && p.y + h <= a.height + 1e-6;
     };
     for (const key of Object.keys(ASSET_TYPES)) {
-      for (const name of ['Milky', 'Order of the Samurai Captain 23']) {
-        const layers = [createSignatureLayer(image(900, 300)), text({ text: name, outlineWidth: 4 })];
+      for (const name of ['Milky', 'Order of the Samurai Captain 23', 'W'.repeat(40)]) {
+        const layers = [
+          createSignatureLayer(image(900, 300)),
+          createSignatureLayer(image(3000, 60)), // a flat stroke, and a second signature that stacks lower
+          text({ text: name, outlineWidth: 4 })
+        ];
         const placements = resolvePlacements(layers, key, asset(key), measure);
         layers.forEach((layer, i) => {
           expect(inside(placements[i], layerSize(layer, measure), asset(key)), `${key}: ${layer.kind} ${name}`).toBe(true);

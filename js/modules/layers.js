@@ -4,6 +4,7 @@
 // defaultPlacement().
 import { ASSET_TYPES } from '../config.js';
 import { clampScale, hitTest, normalizeTransform } from './transform.js';
+import { clamp } from './utils.js';
 
 // Text is laid out at this font size; a text layer's scale 1 means 100px glyphs.
 export const TEXT_FONT_PX = 100;
@@ -72,9 +73,26 @@ function signatureAnchor(asset, tuning) {
     : { x: asset.width / 2, y: asset.height * tuning.squareCenterY };
 }
 
+// A center on one axis that keeps a box of this length inside the space; the
+// middle when it can't fit at all.
+const fitAxis = (center, length, space) => (length >= space ? space / 2 : clamp(center, length / 2, space - length / 2));
+
+// Shrinks a layer bigger than the asset, then moves its unrotated box inside: an
+// anchor near an edge would otherwise push a long name or a flat signature off
+// the asset, and the export would cut it.
+function fitInside(placement, size, asset) {
+  const scale = clampScale(Math.min(placement.scale, asset.width / size.width, asset.height / size.height));
+  return {
+    ...placement,
+    scale,
+    x: fitAxis(placement.x, size.width * scale, asset.width),
+    y: fitAxis(placement.y, size.height * scale, asset.height)
+  };
+}
+
 function signatureDefault(size, asset, tuning) {
   const scale = Math.min(tuning.signatureMaxWidth * asset.width / size.width, tuning.signatureMaxHeight * asset.height / size.height);
-  return { ...signatureAnchor(asset, tuning), scale: clampScale(scale) };
+  return fitInside({ ...signatureAnchor(asset, tuning), scale: clampScale(scale) }, size, asset);
 }
 
 // index counts the layers of this kind before it. signatureSize is the first
@@ -91,14 +109,13 @@ export function defaultPlacement(kind, size, asset, index = 0, signatureSize = n
   } else {
     const anchor = signatureAnchor(asset, tuning);
     const signature = signatureSize && signatureDefault(signatureSize, asset, tuning);
-    const bottom = signature ? anchor.y + signatureSize.height * signature.scale / 2 : anchor.y;
+    const bottom = signature ? signature.y + signatureSize.height * signature.scale / 2 : anchor.y;
     scale = clampScale(Math.min(tuning.textHeight * asset.height / size.height, tuning.textMaxWidth * asset.width / size.width));
-    x = anchor.x;
+    x = signature ? signature.x : anchor.x;
     y = bottom + tuning.textGap * asset.height + size.height * scale / 2;
   }
-  const half = size.height * scale / 2;
-  y = Math.min(y + index * tuning.stackStep * asset.height, asset.height - half);
-  return { x, y, scale, rotation: 0, opacity: 1 };
+  y += index * tuning.stackStep * asset.height;
+  return fitInside({ x, y, scale, rotation: 0, opacity: 1 }, size, asset);
 }
 
 // Placement of every layer on one asset, in layer order.

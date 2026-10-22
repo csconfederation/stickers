@@ -50,8 +50,9 @@ const THUMB_MAX_WIDTH = 480; // THUMB_SIZE in scripts/build_assets.py
 const KIT_THROTTLE_MS = 100;
 const LAND_STAGGER_MS = 45;
 
-// Phones sign on a full-screen pad; wider screens sign over the stage.
-const sheetSigning = matchMedia('(max-width: 599px)');
+// Phones, upright or on their side, sign on a full-screen pad; wider screens
+// sign over the stage.
+const sheetSigning = matchMedia('(max-width: 599px), (max-height: 500px) and (pointer: coarse)');
 const stacked = matchMedia('(max-width: 899px)');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -283,6 +284,7 @@ class App extends EventTarget {
     $('stageMessageText').textContent = message;
     $('stageMessageBtn').textContent = actionLabel;
     this.stageAction = action;
+    this.syncDownload();
   }
 
   bindHeader() {
@@ -904,7 +906,7 @@ class App extends EventTarget {
     const key = e.key.toLowerCase();
     if (mod && key === 'e') {
       e.preventDefault();
-      this.download(this.state.asset, $('downloadBtn'));
+      if (!$('downloadBtn').disabled) this.download(this.state.asset, $('downloadBtn'));
     } else if (this.drawing) {
       if (mod && key === 'z' && !e.shiftKey) {
         e.preventDefault();
@@ -1014,9 +1016,11 @@ class App extends EventTarget {
     }, () => {});
   }
 
+  // Download exports what the stage shows, so only once an asset is up: not while
+  // one loads, or over the last one when the next failed.
   syncDownload() {
     const button = $('downloadBtn');
-    const ready = Boolean(this.state.backgroundImage) && !this.drawing;
+    const ready = Boolean(this.state.backgroundImage) && !this.drawing && $('stage').dataset.state === 'ready';
     const { displayName, width, height } = ASSET_TYPES[this.assetKey];
     button.disabled = !ready;
     button.setAttribute('aria-label', `Download the ${displayName}, ${width}×${height} PNG`);
