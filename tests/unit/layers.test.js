@@ -110,6 +110,27 @@ describe('defaultPlacement: text', () => {
   });
 });
 
+describe('defaultPlacement: hints', () => {
+  test('centerX and centerY pin the signature; other hints override PLACEMENT', () => {
+    const p = defaultPlacement('signature', { width: 400, height: 100 }, square, 0, null, { centerX: 0.5, centerY: 0.6, signatureMaxWidth: 0.4 });
+    expect(p.x).toBe(256);
+    expect(p.y).toBeCloseTo(0.6 * 512);
+    expect(p.scale).toBeCloseTo(0.4 * 512 / 400);
+  });
+
+  test('text follows the hinted center and size', () => {
+    const size = { width: 400, height: 120 };
+    const p = defaultPlacement('text', size, wide, 0, null, { centerX: 0.8, centerY: 0.4, textHeight: 0.15 });
+    expect(p.x).toBeCloseTo(0.8 * 1500);
+    expect(size.height * p.scale).toBeCloseTo(0.15 * 500);
+  });
+
+  test('no hints is PLACEMENT', () => {
+    const size = { width: 400, height: 100 };
+    expect(defaultPlacement('signature', size, wide, 0, null, {})).toEqual(defaultPlacement('signature', size, wide));
+  });
+});
+
 describe('defaultPlacement: index', () => {
   test('index 0 is the base placement; each further layer of a kind sits lower', () => {
     const size = { width: 400, height: 120 };
@@ -191,8 +212,33 @@ describe('placements per asset', () => {
     layer.origins.Sticker = { x: 40, y: 50, scale: 0.7, rotation: 0, opacity: 1 };
     expect(resolvePlacements([layer], 'Sticker', asset('Sticker'), measure)[0]).toEqual(layer.origins.Sticker);
     expect(resolvePlacements([layer], 'DiscordBanner', asset('DiscordBanner'), measure)[0]).toEqual(
-      defaultPlacement('signature', { width: 400, height: 100 }, asset('DiscordBanner'))
+      defaultPlacement('signature', { width: 400, height: 100 }, asset('DiscordBanner'), 0, null, ASSET_TYPES.DiscordBanner.placement)
     );
+  });
+
+  test("defaults use the asset type's placement hints", () => {
+    const layer = createSignatureLayer(image(400, 100));
+    for (const [key, type] of Object.entries(ASSET_TYPES)) {
+      expect(resolvePlacements([layer], key, asset(key), measure)[0])
+        .toEqual(defaultPlacement('signature', { width: 400, height: 100 }, asset(key), 0, null, type.placement));
+    }
+  });
+
+  test('every asset type keeps a default signature and name, short or long, inside the asset', () => {
+    const inside = (p, size, a) => {
+      const w = size.width * p.scale / 2;
+      const h = size.height * p.scale / 2;
+      return p.x - w >= -1e-6 && p.x + w <= a.width + 1e-6 && p.y - h >= -1e-6 && p.y + h <= a.height + 1e-6;
+    };
+    for (const key of Object.keys(ASSET_TYPES)) {
+      for (const name of ['Milky', 'Order of the Samurai Captain 23']) {
+        const layers = [createSignatureLayer(image(900, 300)), text({ text: name, outlineWidth: 4 })];
+        const placements = resolvePlacements(layers, key, asset(key), measure);
+        layers.forEach((layer, i) => {
+          expect(inside(placements[i], layerSize(layer, measure), asset(key)), `${key}: ${layer.kind} ${name}`).toBe(true);
+        });
+      }
+    }
   });
 
   test('order is placement, then origin, then default; dropping the placement falls back to the origin', () => {

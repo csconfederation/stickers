@@ -58,7 +58,7 @@
     <div class="accent-bar" aria-hidden="true"></div>
 
     <main class="workspace" id="workspace">
-        <section class="work" aria-label="Editor">
+        <div class="work">
             <div class="stage" id="stage" data-state="empty">
                 <div class="stage-bar">
                     <p class="stage-title"><span class="label" id="stageLabel">Sticker</span><span class="mono" id="stageSize">512×512</span></p>
@@ -122,21 +122,21 @@
                                 <canvas id="signPad" aria-label="Signature pad"></canvas>
                             </div>
                             <div class="sign-tools">
-                                <label class="field field-range">
-                                    <span class="field-label">Size <output class="mono" id="brushSizeValue" for="brushSize">3</output></span>
-                                    <input type="range" id="brushSize" data-testid="brush-size" min="1" max="20" value="3">
+                                <label class="field field-range field-size">
+                                    <span class="field-label">Size <output class="mono" id="brushSizeValue" for="brushSize">6</output></span>
+                                    <input type="range" id="brushSize" data-testid="brush-size" min="1" max="20" value="6">
                                 </label>
-                                <label class="field field-swatch">
+                                <label class="field field-swatch field-ink">
                                     <span class="field-label">Ink</span>
-                                    <input type="color" id="brushColor" data-testid="brush-color" value="#000000">
+                                    <input type="color" id="brushColor" data-testid="brush-color" value="#ffffff">
                                 </label>
-                                <label class="field field-swatch">
+                                <label class="field field-swatch field-outline">
                                     <span class="field-label">Outline</span>
-                                    <input type="color" id="strokeColor" data-testid="outline-color" value="#ffffff" aria-label="Outline color">
+                                    <input type="color" id="strokeColor" data-testid="outline-color" value="#0a0e1a" aria-label="Outline color">
                                 </label>
-                                <label class="field field-range">
-                                    <span class="field-label">Width <output class="mono" id="strokeWidthValue" for="strokeWidth">0</output></span>
-                                    <input type="range" id="strokeWidth" data-testid="outline-width" min="0" max="10" value="0" aria-label="Outline width">
+                                <label class="field field-range field-outline-width">
+                                    <span class="field-label">Outline width <output class="mono" id="strokeWidthValue" for="strokeWidth">2</output></span>
+                                    <input type="range" id="strokeWidth" data-testid="outline-width" min="0" max="10" value="2">
                                 </label>
                                 <div class="sign-actions">
                                     <button type="button" class="btn" id="undoStroke" data-testid="undo">
@@ -158,25 +158,29 @@
 
                     <div class="panel" role="tabpanel" id="panelText" aria-labelledby="tabText">
                         <div class="panel-row">
-                            <label class="field field-text">
-                                <span class="field-label">Name or number</span>
-                                <input type="text" id="textInput" data-testid="text-input" maxlength="40" placeholder="Your name" autocomplete="off" spellcheck="false">
-                            </label>
-                            <button type="button" class="btn" id="addTextBtn" data-testid="add-text">
-                                <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Add text
-                            </button>
-                            <label class="field field-swatch">
-                                <span class="field-label">Color</span>
-                                <input type="color" id="textColor" data-testid="text-color" value="#ffffff">
-                            </label>
-                            <label class="field field-swatch">
-                                <span class="field-label">Outline</span>
-                                <input type="color" id="textOutlineColor" data-testid="text-outline-color" value="#000000" aria-label="Outline color">
-                            </label>
-                            <label class="field field-range">
-                                <span class="field-label">Width <output class="mono" id="textOutlineWidthValue" for="textOutlineWidth">4</output></span>
-                                <input type="range" id="textOutlineWidth" data-testid="text-outline-width" min="0" max="20" value="4" aria-label="Outline width">
-                            </label>
+                            <div class="text-entry">
+                                <label class="field field-text">
+                                    <span class="field-label">Name or number</span>
+                                    <input type="text" id="textInput" data-testid="text-input" maxlength="40" placeholder="Your name" autocomplete="off" spellcheck="false">
+                                </label>
+                                <button type="button" class="btn" id="addTextBtn" data-testid="add-text">
+                                    <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>Add text
+                                </button>
+                            </div>
+                            <div class="field-group text-style">
+                                <label class="field field-swatch">
+                                    <span class="field-label">Color</span>
+                                    <input type="color" id="textColor" data-testid="text-color" value="#ffffff">
+                                </label>
+                                <label class="field field-swatch">
+                                    <span class="field-label">Outline</span>
+                                    <input type="color" id="textOutlineColor" data-testid="text-outline-color" value="#000000" aria-label="Outline color">
+                                </label>
+                                <label class="field field-range">
+                                    <span class="field-label">Outline width <output class="mono" id="textOutlineWidthValue" for="textOutlineWidth">4</output></span>
+                                    <input type="range" id="textOutlineWidth" data-testid="text-outline-width" min="0" max="20" value="4">
+                                </label>
+                            </div>
                         </div>
                     </div>
 
@@ -246,7 +250,7 @@
                     </div>
                 </div>
             </div>
-        </section>
+        </div>
 
         <aside class="kit" id="kit" aria-labelledby="kitTitle">
             <div class="kit-head">
@@ -259,7 +263,7 @@
     </main>
 
     <footer class="footer">
-        <p>Thanks to chobits, spidey, ry, and Cameron King • CSC 2026</p>
+        <p>Thanks to chobits, spidey, ry, Cameron King, and Skimix • CSC 2026</p>
     </footer>
 
     <dialog class="wall" id="franchiseWall" data-testid="franchise-wall" aria-labelledby="wallTitle">

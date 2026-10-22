@@ -2,13 +2,16 @@
 // per asset: layer.placements[assetKey] once the user edits it, else
 // layer.origins[assetKey] (where a signature was drawn on that asset), else
 // defaultPlacement().
+import { ASSET_TYPES } from '../config.js';
 import { clampScale, hitTest, normalizeTransform } from './transform.js';
 
 // Text is laid out at this font size; a text layer's scale 1 means 100px glyphs.
 export const TEXT_FONT_PX = 100;
 const LINE_HEIGHT = 1.2;
 
-// Fractions of the asset size; tune these to taste.
+// Fractions of the asset size; tune these to taste. An asset type can override any
+// of them with placement hints in ASSET_TYPES (js/config.js), and pin the
+// signature's center with centerX and centerY.
 export const PLACEMENT = {
   signatureMaxWidth: 0.55,
   signatureMaxHeight: 0.3,
@@ -61,37 +64,40 @@ export function layerSize(layer, measure) {
   };
 }
 
-function signatureAnchor(asset) {
-  const wide = asset.width / asset.height > PLACEMENT.squareMaxAspect;
+function signatureAnchor(asset, tuning) {
+  if (tuning.centerX !== undefined) return { x: asset.width * tuning.centerX, y: asset.height * tuning.centerY };
+  const wide = asset.width / asset.height > tuning.squareMaxAspect;
   return wide
-    ? { x: asset.width * PLACEMENT.wideCenterX, y: asset.height * PLACEMENT.wideCenterY }
-    : { x: asset.width / 2, y: asset.height * PLACEMENT.squareCenterY };
+    ? { x: asset.width * tuning.wideCenterX, y: asset.height * tuning.wideCenterY }
+    : { x: asset.width / 2, y: asset.height * tuning.squareCenterY };
 }
 
-function signatureDefault(size, asset) {
-  const scale = Math.min(PLACEMENT.signatureMaxWidth * asset.width / size.width, PLACEMENT.signatureMaxHeight * asset.height / size.height);
-  return { ...signatureAnchor(asset), scale: clampScale(scale) };
+function signatureDefault(size, asset, tuning) {
+  const scale = Math.min(tuning.signatureMaxWidth * asset.width / size.width, tuning.signatureMaxHeight * asset.height / size.height);
+  return { ...signatureAnchor(asset, tuning), scale: clampScale(scale) };
 }
 
 // index counts the layers of this kind before it. signatureSize is the first
 // signature layer's size, if any: text goes just under that signature's default
-// box, or at the signature spot when there is none.
-export function defaultPlacement(kind, size, asset, index = 0, signatureSize = null) {
+// box, or at the signature spot when there is none. hints are the asset type's
+// overrides of PLACEMENT.
+export function defaultPlacement(kind, size, asset, index = 0, signatureSize = null, hints = null) {
+  const tuning = hints ? { ...PLACEMENT, ...hints } : PLACEMENT;
   let x;
   let y;
   let scale;
   if (kind === 'signature') {
-    ({ x, y, scale } = signatureDefault(size, asset));
+    ({ x, y, scale } = signatureDefault(size, asset, tuning));
   } else {
-    const anchor = signatureAnchor(asset);
-    const signature = signatureSize && signatureDefault(signatureSize, asset);
+    const anchor = signatureAnchor(asset, tuning);
+    const signature = signatureSize && signatureDefault(signatureSize, asset, tuning);
     const bottom = signature ? anchor.y + signatureSize.height * signature.scale / 2 : anchor.y;
-    scale = clampScale(Math.min(PLACEMENT.textHeight * asset.height / size.height, PLACEMENT.textMaxWidth * asset.width / size.width));
+    scale = clampScale(Math.min(tuning.textHeight * asset.height / size.height, tuning.textMaxWidth * asset.width / size.width));
     x = anchor.x;
-    y = bottom + PLACEMENT.textGap * asset.height + size.height * scale / 2;
+    y = bottom + tuning.textGap * asset.height + size.height * scale / 2;
   }
   const half = size.height * scale / 2;
-  y = Math.min(y + index * PLACEMENT.stackStep * asset.height, asset.height - half);
+  y = Math.min(y + index * tuning.stackStep * asset.height, asset.height - half);
   return { x, y, scale, rotation: 0, opacity: 1 };
 }
 
@@ -100,10 +106,11 @@ export function resolvePlacements(layers, assetKey, asset, measure) {
   const sizes = layers.map((layer) => layerSize(layer, measure));
   const firstSignature = layers.findIndex((layer) => layer.kind === 'signature');
   const signatureSize = firstSignature === -1 ? null : sizes[firstSignature];
+  const hints = ASSET_TYPES[assetKey]?.placement;
   const seen = { signature: 0, text: 0 };
   return layers.map((layer, i) => {
     const index = seen[layer.kind]++;
-    return layer.placements[assetKey] ?? layer.origins[assetKey] ?? defaultPlacement(layer.kind, sizes[i], asset, index, signatureSize);
+    return layer.placements[assetKey] ?? layer.origins[assetKey] ?? defaultPlacement(layer.kind, sizes[i], asset, index, signatureSize, hints);
   });
 }
 

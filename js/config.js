@@ -26,17 +26,49 @@ export const TEAMS = [
 
 // width/height are the export size in pixels. customBackground marks the
 // assets whose backdrop the user can replace with a solid color or gradient.
+// placement overrides PLACEMENT (js/modules/layers.js) for where layers land by
+// default: centerX/centerY pin the signature's center, and the rest are fractions
+// of the asset's size like PLACEMENT's.
 export const ASSET_TYPES = {
-  ProfilePicture: { width: 512, height: 512, displayName: 'Profile Picture', filename: 'ProfilePicture.png' },
-  DiscordBanner: { width: 1200, height: 480, displayName: 'Discord Banner', filename: 'DiscordBanner.png' },
-  TwitterBanner: { width: 1500, height: 500, displayName: 'Twitter/X Banner', filename: 'TwitterBanner.png' },
-  YoutubeBanner: { width: 2560, height: 1440, displayName: 'YouTube Banner', filename: 'YoutubeBanner.png' },
-  TwitchBanner: { width: 1920, height: 480, displayName: 'Twitch Banner', filename: 'TwitchBanner.png' },
-  DesktopBackground: { width: 1920, height: 1080, displayName: 'Desktop Background', filename: 'DesktopBackground.png' },
+  // Discord crops avatars to a circle, so both layers stay inside it.
+  ProfilePicture: {
+    width: 512, height: 512, displayName: 'Profile Picture', filename: 'ProfilePicture.png',
+    placement: { centerX: 0.5, centerY: 0.68, signatureMaxWidth: 0.5, signatureMaxHeight: 0.24, textHeight: 0.1, textMaxWidth: 0.6 }
+  },
+  // Banners: right of the centered logo and clear of the avatar that overlaps bottom left.
+  DiscordBanner: {
+    width: 1200, height: 480, displayName: 'Discord Banner', filename: 'DiscordBanner.png',
+    placement: { centerX: 0.81, centerY: 0.44, signatureMaxWidth: 0.3, signatureMaxHeight: 0.42, textHeight: 0.15, textMaxWidth: 0.34 }
+  },
+  TwitterBanner: {
+    width: 1500, height: 500, displayName: 'Twitter/X Banner', filename: 'TwitterBanner.png',
+    placement: { centerX: 0.8, centerY: 0.44, signatureMaxWidth: 0.3, signatureMaxHeight: 0.44, textHeight: 0.15, textMaxWidth: 0.34 }
+  },
+  // YouTube shows only the middle 1546x423 on every device; both layers stay inside it.
+  YoutubeBanner: {
+    width: 2560, height: 1440, displayName: 'YouTube Banner', filename: 'YoutubeBanner.png',
+    placement: { centerX: 0.68, centerY: 0.47, signatureMaxWidth: 0.22, signatureMaxHeight: 0.19, textHeight: 0.065, textMaxWidth: 0.22 }
+  },
+  TwitchBanner: {
+    width: 1920, height: 480, displayName: 'Twitch Banner', filename: 'TwitchBanner.png',
+    placement: { centerX: 0.79, centerY: 0.44, signatureMaxWidth: 0.26, signatureMaxHeight: 0.46, textHeight: 0.16, textMaxWidth: 0.3 }
+  },
+  // Bottom right, like a signed print: clear of logos large and small, above a taskbar.
+  DesktopBackground: {
+    width: 1920, height: 1080, displayName: 'Desktop Background', filename: 'DesktopBackground.png',
+    placement: { centerX: 0.82, centerY: 0.78, signatureMaxWidth: 0.3, signatureMaxHeight: 0.16, textHeight: 0.06, textMaxWidth: 0.3 }
+  },
   Sticker: { width: 512, height: 512, displayName: 'Sticker', filename: 'Sticker.png', customBackground: true },
   StickerShadow: { width: 512, height: 512, displayName: 'Sticker Shadow', filename: 'Sticker Shadow.png', customBackground: true },
-  SeasonTeamSticker: { width: 512, height: 512, displayName: 'Season Team Sticker', filename: 'SeasonTeamSticker.png' },
-  SeasonSignatureSticker: { width: 512, height: 512, displayName: 'Season Signature Sticker', filename: 'SeasonSignatureSticker.png' }
+  // Season stickers are a disc in a lettered ring: both layers stay on the disc.
+  SeasonTeamSticker: {
+    width: 512, height: 512, displayName: 'Season Team Sticker', filename: 'SeasonTeamSticker.png',
+    placement: { centerX: 0.5, centerY: 0.6, signatureMaxWidth: 0.46, signatureMaxHeight: 0.2, textHeight: 0.08, textMaxWidth: 0.4 }
+  },
+  SeasonSignatureSticker: {
+    width: 512, height: 512, displayName: 'Season Signature Sticker', filename: 'SeasonSignatureSticker.png',
+    placement: { centerX: 0.5, centerY: 0.6, signatureMaxWidth: 0.46, signatureMaxHeight: 0.2, textHeight: 0.08, textMaxWidth: 0.4 }
+  }
 };
 
 export const DEFAULT_ASSET = 'Sticker';
