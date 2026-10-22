@@ -26,13 +26,30 @@ function paintBackdrop(ctx, { type, solidColor, gradientColor1, gradientColor2, 
   ctx.fillRect(0, 0, width, height);
 }
 
-function drawLayer(ctx, layer, placement, size) {
+// Shrunk far below its bitmap (kit thumbnails, the landing stamp), a signature's
+// strokes thin under a device pixel and vanish into the art. Below this scale it
+// is first drawn a device pixel off in each direction, which thickens it.
+const MIN_SIGNATURE_SCALE = 0.5;
+
+// Offsets in layer pixels for those extra draws. None at render scale 1, so the
+// stage and the export stay exact.
+export function dilationOffsets(renderScale, layerScale) {
+  const scale = renderScale * layerScale;
+  if (renderScale >= 1 || scale >= MIN_SIGNATURE_SCALE) return [];
+  const d = 1 / scale;
+  return [[-d, 0], [d, 0], [0, -d], [0, d], [-d, -d], [d, -d], [-d, d], [d, d]];
+}
+
+function drawLayer(ctx, layer, placement, size, renderScale) {
   ctx.save();
   ctx.globalAlpha = placement.opacity;
   ctx.translate(placement.x, placement.y);
   ctx.rotate(placement.rotation * Math.PI / 180);
   ctx.scale(placement.scale, placement.scale);
   if (layer.kind === 'signature') {
+    for (const [dx, dy] of dilationOffsets(renderScale, placement.scale)) {
+      ctx.drawImage(layer.image, dx - size.width / 2, dy - size.height / 2);
+    }
     ctx.drawImage(layer.image, -size.width / 2, -size.height / 2);
   } else {
     ctx.font = textFont(layer);
@@ -66,7 +83,7 @@ export function renderComposite(ctx, { image, assetSize, backgroundSettings, cus
   }
   const measure = measureWith(ctx);
   const placements = resolvePlacements(layers, assetKey, assetSize, measure);
-  layers.forEach((layer, i) => drawLayer(ctx, layer, placements[i], layerSize(layer, measure)));
+  layers.forEach((layer, i) => drawLayer(ctx, layer, placements[i], layerSize(layer, measure), scale));
   ctx.restore();
 }
 
