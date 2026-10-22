@@ -1,4 +1,4 @@
-import { expect } from '@playwright/test'
+import { test as base, expect } from '@playwright/test'
 import { randomBytes } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -22,9 +22,11 @@ export const ASSETS = {
   SeasonSignatureSticker: { width: 512, height: 512, file: 'SeasonSignatureSticker.png' },
 }
 
+// Franchises that have at least one asset: the ones the franchise wall should list.
 export const TEAM_PREFIXES = fs
   .readdirSync(path.join(APP_DIR, 'teams'), { withFileTypes: true })
   .filter((d) => d.isDirectory())
+  .filter((d) => fs.readdirSync(path.join(APP_DIR, 'teams', d.name)).some((f) => f.endsWith('.png')))
   .map((d) => d.name)
   .sort()
 
@@ -33,30 +35,75 @@ export const assetExists = (team, key) =>
 
 export const MAGENTA = '#ff00ff'
 
+// `test` with a page that (a) never reaches Google Fonts, so text falls back to sans-serif
+// instead of depending on the network, and (b) fails the test on any error toast or
+// uncaught page error, which no flow in these tests should produce.
+export const test = base.extend({
+  page: async ({ page }, use) => {
+    const pageErrors = []
+    page.on('pageerror', (e) => pageErrors.push(String(e)))
+    await page.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, (route) =>
+      route.fulfill({ status: 200, contentType: 'text/css', body: '' })
+    )
+    await page.addInitScript(() => {
+      window.__errorToasts = []
+      new MutationObserver((records) => {
+        for (const record of records) {
+          for (const node of record.addedNodes) {
+            if (node.classList?.contains('toast-error')) window.__errorToasts.push(node.textContent)
+          }
+        }
+      }).observe(document, { childList: true, subtree: true })
+
+      // Bounding box and count of pixels near a colour on a canvas; null when there are none.
+      const masks = {
+        magenta: (r, g, b) => r > 180 && g < 80 && b > 180,
+      }
+      window.__ink = (canvas, color) => {
+        if (!canvas.width || !canvas.height) return null
+        const d = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data
+        const match = masks[color]
+        let box = null
+        let count = 0
+        for (let i = 0; i < d.length; i += 4) {
+          if (d[i + 3] < 150 || !match(d[i], d[i + 1], d[i + 2])) continue
+          const x = (i / 4) % canvas.width
+          const y = Math.floor(i / 4 / canvas.width)
+          box ??= { minX: x, minY: y, maxX: x, maxY: y }
+          box.minX = Math.min(box.minX, x)
+          box.maxX = Math.max(box.maxX, x)
+          box.minY = Math.min(box.minY, y)
+          box.maxY = Math.max(box.maxY, y)
+          count++
+        }
+        return box && { ...box, count }
+      }
+    })
+    await use(page)
+    expect.soft(pageErrors, 'uncaught page errors').toEqual([])
+    expect.soft(await page.evaluate(() => window.__errorToasts).catch(() => []), 'error toasts').toEqual([])
+  },
+})
+
+// First visit: storage is empty, so the franchise wall opens by itself once the manifest loads.
 export async function openApp(page) {
   await page.goto('/')
   await page.evaluate(() => localStorage.clear())
-  // Options are appended in the same task that wires the listeners.
-  await expect(page.locator('#teamSelect option').nth(1)).toBeAttached()
+  await expect(page.getByTestId('franchise-wall')).toBeVisible()
 }
 
-// Toasts pile up for ~3 s, so clear them first and wait for the one this action raises.
-export async function afterLoadToast(page, action) {
-  await page.evaluate(() => document.querySelectorAll('.toast').forEach((t) => t.remove()))
-  await action()
-  const toast = page.locator('.toast-success, .toast-error').first()
-  await toast.waitFor({ state: 'attached', timeout: 10_000 })
-  return {
-    error: ((await toast.getAttribute('class')) ?? '').includes('toast-error'),
-    message: (await toast.textContent()) ?? '',
-  }
+// Picks a franchise from the wall (opening it if needed) and waits for its asset to be drawn.
+export async function chooseTeam(page, prefix, asset = 'Sticker') {
+  if (!(await page.getByTestId('franchise-wall').isVisible())) await page.getByTestId('franchise-chip').click()
+  await page.getByTestId(`team-${prefix}`).click()
+  await expect(page.locator('#mainCanvas')).toHaveAttribute('data-asset', `${prefix}/${asset}`)
 }
 
-export const chooseTeam = (page, prefix) =>
-  afterLoadToast(page, () => page.locator('#teamSelect').selectOption(prefix))
-
-export const chooseAsset = (page, key) =>
-  afterLoadToast(page, () => page.locator('#assetSelect').selectOption(key))
+// Picks an asset tile and waits for its background to be drawn.
+export async function chooseAsset(page, prefix, asset) {
+  await page.getByTestId(`asset-${asset}`).click()
+  await expect(page.locator('#mainCanvas')).toHaveAttribute('data-asset', `${prefix}/${asset}`)
+}
 
 export const canvasSize = (page) =>
   page.evaluate(() => {
@@ -64,66 +111,65 @@ export const canvasSize = (page) =>
     return [c.width, c.height]
   })
 
-// Drawing mode scales the canvas wrapper with a CSS transition; positions are only
-// meaningful once every animation has finished.
-export const settle = (page) =>
-  page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))))
+// Rect of an element once layout has stopped moving (three identical frames in a row).
+export const stableRect = (page, selector) =>
+  page.evaluate(
+    (sel) =>
+      new Promise((resolve) => {
+        const el = document.querySelector(sel)
+        let last = ''
+        let same = 0
+        const tick = () => {
+          const r = el.getBoundingClientRect()
+          const now = [r.left, r.top, r.width, r.height].join()
+          same = now === last ? same + 1 : 0
+          last = now
+          if (same >= 3) resolve({ left: r.left, top: r.top, width: r.width, height: r.height })
+          else requestAnimationFrame(tick)
+        }
+        tick()
+      }),
+    selector
+  )
 
-export async function startDrawing(page, { color = MAGENTA, size = 10 } = {}) {
-  await page.locator('#drawBtn').click()
-  await page.locator('#brushColor').fill(color)
-  await page.locator('#brushSize').fill(String(size))
-  await settle(page)
-}
-
-export const applySignature = (page) => page.locator('#doneDrawing').click()
-
-// canvas px <-> client px on #drawingCanvas, using its bounding rect so CSS scaling is honoured.
+// Asset px <-> client px, through #mainCanvas's rect so any CSS scaling is honoured.
 export const toClient = (page, p) =>
   page.evaluate(({ x, y }) => {
-    const c = document.getElementById('drawingCanvas')
+    const c = document.getElementById('mainCanvas')
     const r = c.getBoundingClientRect()
     return { x: r.left + (x * r.width) / c.width, y: r.top + (y * r.height) / c.height }
   }, p)
 
-export const toCanvas = (page, p) =>
-  page.evaluate(({ x, y }) => {
-    const c = document.getElementById('drawingCanvas')
-    const r = c.getBoundingClientRect()
-    return { x: ((x - r.left) * c.width) / r.width, y: ((y - r.top) * c.height) / r.height }
-  }, p)
+// True when a pointer at this client point would reach the element (not clipped or covered).
+export const reaches = (page, selector, p) =>
+  page.evaluate(({ sel, x, y }) => document.elementFromPoint(x, y) === document.querySelector(sel), { sel: selector, ...p })
 
-// True when a pointer at this client point would reach #drawingCanvas (not clipped or covered).
-export const reachesDrawingCanvas = (page, p) =>
-  page.evaluate(({ x, y }) => document.elementFromPoint(x, y)?.id === 'drawingCanvas', p)
-
-// Client-space box of #drawingCanvas that pointers can actually reach (viewport and scroll clipping applied).
-export const reachableBox = (page) =>
-  page.evaluate(() => {
-    const c = document.getElementById('drawingCanvas')
-    const r = c.getBoundingClientRect()
-    const n = 50
-    let box = null
-    for (let i = 0; i < n; i++) {
-      for (let j = 0; j < n; j++) {
-        const x = r.left + ((i + 0.5) * r.width) / n
-        const y = r.top + ((j + 0.5) * r.height) / n
-        if (document.elementFromPoint(x, y) !== c) continue
-        box ??= { left: x, top: y, right: x, bottom: y }
-        box.left = Math.min(box.left, x)
-        box.top = Math.min(box.top, y)
-        box.right = Math.max(box.right, x)
-        box.bottom = Math.max(box.bottom, y)
-      }
-    }
-    return box
-  })
+// Opens the pad and sets the brush. On a desktop-width page the pad is laid over the stage.
+export async function startDrawing(page, { color = MAGENTA, size = 10 } = {}) {
+  await page.getByTestId('draw').click()
+  await page.getByTestId('brush-color').fill(color)
+  await page.getByTestId('brush-size').fill(String(size))
+  await stableRect(page, '#mainCanvas')
+}
 
 export async function mouseStroke(page, from, to, steps = 20) {
   await page.mouse.move(from.x, from.y)
   await page.mouse.down()
   await page.mouse.move(to.x, to.y, { steps })
   await page.mouse.up()
+}
+
+// A stroke between two asset-px points on the pad over the stage.
+export async function padStroke(page, from, to) {
+  await mouseStroke(page, await toClient(page, from), await toClient(page, to))
+}
+
+// Draws one stroke on the pad over the stage and applies it; resolves once the layer is selected.
+export async function drawSignature(page, from, to, options) {
+  await startDrawing(page, options)
+  await padStroke(page, from, to)
+  await page.getByTestId('apply').click()
+  await expect(page.locator('#signatureBox')).toHaveClass(/\bactive\b/)
 }
 
 export async function touchStroke(page, from, to, steps = 20) {
@@ -141,10 +187,51 @@ export async function touchStroke(page, from, to, steps = 20) {
   await cdp.detach()
 }
 
-// Magenta ink within `radius` canvas px of a point on #mainCanvas.
-export const inkNear = (page, p, radius = 3) =>
+// Ink of a colour on a canvas: { minX, minY, maxX, maxY, count } in canvas px, or null.
+export const inkBox = (page, color = 'magenta', selector = '#mainCanvas') =>
+  page.evaluate(([sel, col]) => window.__ink(document.querySelector(sel), col), [selector, color])
+
+export const tileInk = (page, asset, color = 'magenta') =>
+  inkBox(page, color, `.kit-tile[data-asset="${asset}"] canvas`)
+
+// RGBA of one pixel on #mainCanvas.
+export const pixel = (page, x, y) =>
+  page.evaluate(([px, py]) => [...document.getElementById('mainCanvas').getContext('2d').getImageData(px, py, 1, 1).data], [x, y])
+
+// How far the selected layer's box sticks out past each edge of the asset, in asset px
+// (negative: inside by that much).
+export const overhang = (page) =>
+  page.evaluate(() => {
+    const c = document.getElementById('mainCanvas')
+    const r = c.getBoundingClientRect()
+    const b = document.getElementById('signatureBox').getBoundingClientRect()
+    const k = c.width / r.width
+    return {
+      left: Math.round((r.left - b.left) * k),
+      right: Math.round((b.right - r.right) * k),
+      top: Math.round((r.top - b.top) * k),
+      bottom: Math.round((b.bottom - r.bottom) * k),
+    }
+  })
+
+// The PNG the app would download for an asset, decoded: { size, ink }.
+export const exportedInk = (page, asset, color = 'magenta') =>
   page.evaluate(
-    ({ x, y, r }) => {
+    async ([key, col]) => {
+      const bitmap = await createImageBitmap(await window.app.exportAsset(key))
+      const canvas = document.createElement('canvas')
+      canvas.width = bitmap.width
+      canvas.height = bitmap.height
+      canvas.getContext('2d').drawImage(bitmap, 0, 0)
+      return { size: [bitmap.width, bitmap.height], ink: window.__ink(canvas, col) }
+    },
+    [asset, color]
+  )
+
+// Ink of a colour within `radius` canvas px of a point on #mainCanvas.
+export const inkNear = (page, p, radius = 3, color = 'magenta') =>
+  page.evaluate(
+    ({ x, y, r, col }) => {
       const c = document.getElementById('mainCanvas')
       const cx = Math.round(x)
       const cy = Math.round(y)
@@ -153,37 +240,21 @@ export const inkNear = (page, p, radius = 3) =>
       const w = Math.min(c.width, cx + r + 1) - x0
       const h = Math.min(c.height, cy + r + 1) - y0
       if (w <= 0 || h <= 0) return false
-      const d = c.getContext('2d').getImageData(x0, y0, w, h).data
-      for (let i = 0; i < d.length; i += 4) {
-        if (d[i] > 200 && d[i + 1] < 60 && d[i + 2] > 200 && d[i + 3] > 200) return true
-      }
-      return false
+      const win = document.createElement('canvas')
+      win.width = w
+      win.height = h
+      win.getContext('2d').drawImage(c, x0, y0, w, h, 0, 0, w, h)
+      return window.__ink(win, col) !== null
     },
-    { ...p, r: radius }
+    { ...p, r: radius, col: color }
   )
 
-// Bounding box (canvas px) of all magenta ink on #mainCanvas, or null when there is none.
-export const inkBox = (page) =>
-  page.evaluate(() => {
-    const c = document.getElementById('mainCanvas')
-    const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data
-    let box = null
-    for (let i = 0; i < d.length; i += 4) {
-      if (!(d[i] > 200 && d[i + 1] < 60 && d[i + 2] > 200 && d[i + 3] > 200)) continue
-      const x = (i / 4) % c.width
-      const y = Math.floor(i / 4 / c.width)
-      box ??= { minX: x, minY: y, maxX: x, maxY: y }
-      box.minX = Math.min(box.minX, x)
-      box.maxX = Math.max(box.maxX, x)
-      box.minY = Math.min(box.minY, y)
-      box.maxY = Math.max(box.maxY, y)
-    }
-    return box
-  })
-
-// Rendered (post-transform) size of #signatureBox.
-export const signatureBoxWidth = (page) =>
-  page.evaluate(() => document.getElementById('signatureBox').getBoundingClientRect().width)
+// Placement { x, y, scale, rotation, opacity } of a layer on the asset on the stage.
+export const placementOf = (page, layerIndex = 0) =>
+  page.evaluate((i) => {
+    const { x, y, scale, rotation, opacity } = window.app.placementOf(window.app.state.layers[i])
+    return { x, y, scale, rotation, opacity }
+  }, layerIndex)
 
 // Width/height from the PNG IHDR chunk; throws if the bytes are not a PNG.
 export function pngSize(buf) {
