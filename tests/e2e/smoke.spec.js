@@ -599,6 +599,22 @@ test.describe('11. failed loads', () => {
     await expect(stage(page)).toHaveAttribute('data-asset', 'ATL/DiscordBanner')
     await expect(page.locator('#stage')).toHaveAttribute('data-state', 'ready')
   })
+
+  test('11c. a failed asset load disables Download until Retry works', { tag: '@desktop' }, async ({ page }) => {
+    await chooseTeam(page, 'ATL')
+    await expect(page.getByTestId('download')).toBeEnabled()
+    let fail = true
+    await page.route('**/teams/ATL/DiscordBanner.png', (route) => (fail ? route.abort() : route.continue()))
+    await page.getByTestId('asset-DiscordBanner').click()
+    await expect(page.locator('#stage')).toHaveAttribute('data-state', 'error')
+    // The stage is showing an error, so a download would hand over a picture the user isn't looking at.
+    await expect(page.getByTestId('download'), 'Download while the stage is in an error').toBeDisabled()
+
+    fail = false
+    await page.locator('#stageMessageBtn').click()
+    await expect(stage(page)).toHaveAttribute('data-asset', 'ATL/DiscordBanner')
+    await expect(page.getByTestId('download')).toBeEnabled()
+  })
 })
 
 // 12. Background ------------------------------------------------------------
