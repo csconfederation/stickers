@@ -256,6 +256,75 @@ export const placementOf = (page, layerIndex = 0) =>
     return { x, y, scale, rotation, opacity }
   }, layerIndex)
 
+// Holds requests for `url` (a glob) until release(). release() resolves once the late response
+// is in and the page has had a moment to act on it, or to ignore it.
+export async function holdRequests(page, url) {
+  let open
+  const gate = new Promise((resolve) => { open = resolve })
+  let seen
+  const requested = new Promise((resolve) => { seen = resolve })
+  await page.route(url, async (route) => {
+    seen()
+    await gate
+    await route.continue().catch(() => {})
+  })
+  return {
+    requested,
+    async release() {
+      const responded = page.waitForResponse(url, { timeout: 5_000 })
+      open()
+      await responded
+      await page.waitForTimeout(500)
+    },
+  }
+}
+
+// Mean RGB difference (0-255) between a PNG's bytes and each reference image URL, compared at 64x36.
+export const pngDistances = (page, bytes, urls) =>
+  page.evaluate(
+    async ([b64, list]) => {
+      const small = async (blob) => {
+        const bitmap = await createImageBitmap(blob)
+        const canvas = document.createElement('canvas')
+        canvas.width = 64
+        canvas.height = 36
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(bitmap, 0, 0, 64, 36)
+        return ctx.getImageData(0, 0, 64, 36).data
+      }
+      const mine = await small(await (await fetch(`data:image/png;base64,${b64}`)).blob())
+      return Promise.all(
+        list.map(async (url) => {
+          const ref = await small(await (await fetch(url)).blob())
+          let sum = 0
+          let n = 0
+          for (let i = 0; i < mine.length; i += 4) {
+            for (let c = 0; c < 3; c++) {
+              sum += Math.abs(mine[i + c] - ref[i + c])
+              n++
+            }
+          }
+          return sum / n
+        })
+      )
+    },
+    [Buffer.from(bytes).toString('base64'), urls]
+  )
+
+// Ink of a colour in a PNG's bytes: { minX, minY, maxX, maxY, count } or null.
+export const pngInk = (page, bytes, color = 'magenta') =>
+  page.evaluate(
+    async ([b64, col]) => {
+      const bitmap = await createImageBitmap(await (await fetch(`data:image/png;base64,${b64}`)).blob())
+      const canvas = document.createElement('canvas')
+      canvas.width = bitmap.width
+      canvas.height = bitmap.height
+      canvas.getContext('2d').drawImage(bitmap, 0, 0)
+      return window.__ink(canvas, col)
+    },
+    [Buffer.from(bytes).toString('base64'), color]
+  )
+
 // Width/height from the PNG IHDR chunk; throws if the bytes are not a PNG.
 export function pngSize(buf) {
   const sig = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])

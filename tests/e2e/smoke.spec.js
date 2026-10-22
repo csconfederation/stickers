@@ -23,6 +23,9 @@ import {
   tileInk,
   exportedInk,
   placementOf,
+  holdRequests,
+  pngDistances,
+  pngInk,
   pixel,
   overhang,
   pngSize,
@@ -648,4 +651,102 @@ test('12. the backdrop controls recolour the Sticker and Sticker Shadow only', {
 
   await chooseAsset(page, 'ATL', 'ProfilePicture')
   await expect(page.getByTestId('tab-background')).toBeHidden()
+})
+
+// 13. Races -----------------------------------------------------------------
+
+// A slow request must never leave the page showing, or exporting, something the user
+// didn't ask for last.
+test.describe('13. races', () => {
+  test('13a. a download keeps one franchise when the franchise changes under it', { tag: '@desktop' }, async ({ page }) => {
+    await chooseTeam(page, 'ATL')
+    await drawSignature(page, FROM, TO, { size: BRUSH })
+    const banner = await holdRequests(page, '**/teams/ATL/YoutubeBanner.png')
+
+    // The tile download needs ATL's full-size banner, which is slow; meanwhile the user moves on.
+    await page.getByTestId('download-YoutubeBanner').click()
+    await banner.requested
+    await chooseTeam(page, 'BCH')
+    const downloaded = page.waitForEvent('download', { timeout: 4_000 }).catch(() => null)
+    await banner.release()
+
+    // Either no file at all, or a file whose name, pixels and layers all say ATL.
+    const file = await downloaded
+    if (file) {
+      const bytes = fs.readFileSync(await file.path())
+      expect(file.suggestedFilename(), 'the file is named for the wrong franchise').toMatch(/^ATL_/)
+      expect(pngSize(bytes)).toEqual([2560, 1440])
+      const [atl, bch] = await pngDistances(page, bytes, ['teams/ATL/YoutubeBanner.png', 'teams/BCH/YoutubeBanner.png'])
+      expect(atl, `pixels are closer to BCH's banner (ATL ${atl.toFixed(1)}, BCH ${bch.toFixed(1)})`).toBeLessThan(bch)
+      expect((await pngInk(page, bytes))?.count ?? 0, 'the ATL-era signature is missing').toBeGreaterThan(100)
+    }
+    await expect(stage(page)).toHaveAttribute('data-asset', 'BCH/Sticker')
+  })
+
+  test('13b. clicking the current asset cancels a pending load of another', { tag: '@desktop' }, async ({ page }) => {
+    await chooseTeam(page, 'ATL')
+    const discord = await holdRequests(page, '**/teams/ATL/DiscordBanner.png')
+    await page.getByTestId('asset-DiscordBanner').click()
+    await discord.requested
+    await expect(page.locator('#stage')).toHaveAttribute('data-state', 'loading')
+
+    await page.getByTestId('asset-Sticker').click()
+    await discord.release()
+
+    await expect(stage(page), 'the late Discord banner replaced the asset clicked last').toHaveAttribute('data-asset', 'ATL/Sticker')
+    await expect(page.getByTestId('asset-Sticker')).toHaveAttribute('aria-current', 'true')
+    await expect(page.getByTestId('asset-DiscordBanner')).not.toHaveAttribute('aria-current', 'true')
+    await expect(page.locator('#stage')).toHaveAttribute('data-state', 'ready')
+    expect(await canvasSize(page)).toEqual([512, 512])
+    await expect(page.getByTestId('download')).toBeEnabled()
+  })
+
+  test('13c. clicking the current asset after another failed to load recovers', { tag: '@desktop' }, async ({ page }) => {
+    await chooseTeam(page, 'ATL')
+    await page.route('**/teams/ATL/DiscordBanner.png', (route) => route.fulfill({ status: 404, body: 'gone' }))
+    await page.getByTestId('asset-DiscordBanner').click()
+    await expect(page.locator('#stage')).toHaveAttribute('data-state', 'error')
+
+    await page.getByTestId('asset-Sticker').click()
+    await expect(page.locator('#stage'), 'the stage is stuck in the error').toHaveAttribute('data-state', 'ready')
+    await expect(stage(page)).toHaveAttribute('data-asset', 'ATL/Sticker')
+    await expect(page.getByTestId('download')).toBeEnabled()
+  })
+
+  test('13d. picking the current franchise cancels a pending franchise change', { tag: '@desktop' }, async ({ page }) => {
+    await chooseTeam(page, 'ATL')
+    const beach = await holdRequests(page, '**/teams/BCH/Sticker.png')
+    await page.getByTestId('franchise-chip').click()
+    await page.getByTestId('team-BCH').click()
+    await beach.requested
+    await expect(page.locator('#stage')).toHaveAttribute('data-state', 'loading')
+
+    await page.getByTestId('franchise-chip').click()
+    await page.getByTestId('team-ATL').click()
+    await beach.release()
+
+    await expect(stage(page), 'the late franchise replaced the one picked last').toHaveAttribute('data-asset', 'ATL/Sticker')
+    await expect(page.getByTestId('franchise-chip')).toContainText('ATL')
+    await expect(page.locator('#stage')).toHaveAttribute('data-state', 'ready')
+    await expect(page.getByTestId('download')).toBeEnabled()
+  })
+
+  test('13e. the pad does not open mid-load, and a stroke after it lands on the right art', { tag: '@desktop' }, async ({ page }) => {
+    await chooseTeam(page, 'ATL')
+    const discord = await holdRequests(page, '**/teams/ATL/DiscordBanner.png')
+    await page.getByTestId('asset-DiscordBanner').click()
+    await discord.requested
+    await expect(page.locator('#stage')).toHaveAttribute('data-state', 'loading')
+
+    // Draw may be disabled, or pressing it may do nothing yet; it must not open a pad on a stage that is about to change size.
+    const draw = page.getByTestId('draw')
+    if (await draw.isEnabled()) await draw.click()
+    const padOpen = () =>
+      page.evaluate(() => document.getElementById('signView').open || document.getElementById('drawingCanvas').classList.contains('active'))
+    expect(await padOpen(), 'the pad opened while the asset was loading').toBe(false)
+
+    await discord.release()
+    await expect(stage(page)).toHaveAttribute('data-asset', 'ATL/DiscordBanner')
+    await expectPadStrokeLands(page, 'DiscordBanner', { x: 150, y: 300 }, { x: 1050, y: 300 })
+  })
 })
