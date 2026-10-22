@@ -44,6 +44,7 @@
   --handle: #ffffff;
   --box-edge: rgba(10, 14, 26, 0.55);
   --selection: rgba(247, 147, 30, 0.35);
+  --swatch-edge: rgba(255, 255, 255, 0.22);
   --select-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6l6 -6'/%3E%3C/svg%3E");
 
   --font-display: 'Exo', sans-serif;
@@ -79,6 +80,7 @@
   --scrim: rgba(15, 23, 42, 0.5);
   --skeleton-a: #e2e8f0;
   --skeleton-b: #f1f5f9;
+  --swatch-edge: rgba(15, 23, 42, 0.28);
   --select-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6l6 -6'/%3E%3C/svg%3E");
 }
 
@@ -318,6 +320,7 @@ button { cursor: pointer; }
 }
 
 .field-range { width: 148px; }
+.field-range input[type="range"] { height: var(--control); }
 
 input[type="text"],
 select {
@@ -361,8 +364,9 @@ input[type="color"] {
 }
 
 input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-input[type="color"]::-webkit-color-swatch { border: 0; border-radius: 2px; }
-input[type="color"]::-moz-color-swatch { border: 0; border-radius: 2px; }
+/* The inner edge keeps a swatch that matches the panel (white on light) visible. */
+input[type="color"]::-webkit-color-swatch { border: 1px solid var(--swatch-edge); border-radius: 2px; }
+input[type="color"]::-moz-color-swatch { border: 1px solid var(--swatch-edge); border-radius: 2px; }
 input[type="color"]:hover { border-color: var(--subtle); }
 
 /* --fill is the filled share of the track, set from js/app.js. */
@@ -500,12 +504,6 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--f
   height: 36px;
   flex: none;
   color: var(--muted);
-}
-
-.chip-art img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
 }
 
 .chip-code {
@@ -840,7 +838,15 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--f
 .sign-choice { align-items: center; }
 .sign-choice .hint { flex: 1 1 240px; }
 
-.field-text { flex: 1 1 200px; max-width: 280px; }
+.text-entry {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex: 1 1 340px;
+  max-width: 420px;
+}
+
+.field-text { flex: 1 1 200px; }
 .field-text input { width: 100%; }
 .field-group { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; }
 .field-select select { min-width: 200px; }
@@ -882,13 +888,16 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--f
   gap: 12px;
 }
 
-.sign-tools .field-range { width: 108px; }
+.sign-tools .field-size { width: 100px; }
+.sign-tools .field-outline-width { width: auto; min-width: 120px; }
 
 .sign-actions {
   display: flex;
   gap: 8px;
   margin-left: auto;
 }
+
+.sign-actions .btn { padding: 0 12px; }
 
 .layer-bar {
   display: grid;
@@ -1179,7 +1188,8 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--f
   outline-offset: -2px;
 }
 
-.wall-item[aria-current="true"]:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.wall-item:focus-visible,
+.wall-item[aria-current="true"]:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
 
 .wall-art {
   width: 72px;
@@ -1192,14 +1202,12 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--f
   animation: shimmer 1.4s linear infinite;
 }
 
-.wall-art img {
+.wall-art canvas,
+.chip-art canvas {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
 }
-
-.wall-art:not(.is-loaded) img { opacity: 0; }
 
 .wall-code {
   color: var(--text);
@@ -1208,13 +1216,15 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--f
 }
 
 .wall-name {
+  display: -webkit-box;
   max-width: 100%;
   overflow: hidden;
   color: var(--muted);
   font-size: 0.75rem;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.25;
+  text-align: center;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 /* ===== Footer and toasts ===== */
@@ -1309,6 +1319,12 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--f
 @media (max-width: 899px) {
   .stage-hint { display: none; }
 
+  /* Stage, then the kit, then the tray, so the kit shows without scrolling past the tools. */
+  .work { display: contents; }
+  .stage { order: 1; }
+  .kit { order: 2; }
+  .tray { order: 3; }
+
   .kit {
     margin: 0 -16px;
     border-width: 1px 0;
@@ -1359,7 +1375,10 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--f
   .panel.is-off { display: none; }
   .panel-row > *,
   .field-group > * { flex: 1 1 auto; }
-  .field-text { flex-basis: 100%; max-width: none; }
+  .text-entry { flex-basis: 100%; max-width: none; }
+  .text-style { flex-basis: 100%; flex-wrap: nowrap; }
+  .text-style > .field-swatch { flex: none; }
+  .text-style > .field-range { flex: 1 1 auto; width: auto; }
   .segmented { width: 100%; }
   .segmented label { flex: 1; }
   .segmented span { width: 100%; justify-content: center; padding: 0 6px; }
@@ -1370,15 +1389,21 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--f
   .layer-bar:not(.has-selection) .layer-controls,
   .layer-bar.has-selection .layer-hint { display: none; }
 
+  /* One slider per row, its label beside it. */
   .layer-controls {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px 12px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
   }
 
-  .layer-controls .field-range { width: auto; }
-  .layer-controls .field-label { letter-spacing: 0.08em; }
-  .layer-actions { grid-column: 1 / -1; margin: 0; }
+  .layer-controls .field-range {
+    grid-template-columns: 128px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    width: auto;
+  }
+
+  .layer-actions { margin: 8px 0 0; }
   .layer-actions .btn { flex: 1; }
 
   .wall {
@@ -1466,15 +1491,19 @@ input[type="range"]:focus-visible::-moz-range-thumb { outline: 2px solid var(--f
 
   .sign-tools {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto minmax(0, 1fr);
-    gap: 12px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "size ink" "width outline" "actions actions";
+    gap: 12px 16px;
     padding: 12px 16px 16px;
   }
 
-  .sign-tools .field-range { width: auto; }
+  .sign-tools .field-size { grid-area: size; width: auto; }
+  .sign-tools .field-ink { grid-area: ink; }
+  .sign-tools .field-outline { grid-area: outline; }
+  .sign-tools .field-outline-width { grid-area: width; }
 
   .sign-actions {
-    grid-column: 1 / -1;
+    grid-area: actions;
     display: grid;
     grid-template-columns: 1fr 1fr;
     margin: 0;

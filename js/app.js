@@ -100,6 +100,43 @@ function isLightColor(hex) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.6;
 }
 
+// Bounds of the pixels with real opacity, in image pixels, from a small sample.
+function opaqueBox(img) {
+  const n = 64;
+  const ctx = h('canvas', { width: n, height: n }).getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(img, 0, 0, n, n);
+  const { data } = ctx.getImageData(0, 0, n, n);
+  let [left, top, right, bottom] = [n, n, -1, -1];
+  for (let i = 0; i < n * n; i++) {
+    if (data[i * 4 + 3] < 16) continue;
+    const x = i % n;
+    const y = (i - x) / n;
+    left = Math.min(left, x);
+    right = Math.max(right, x);
+    top = Math.min(top, y);
+    bottom = Math.max(bottom, y);
+  }
+  if (right < 0) return null;
+  const sx = img.naturalWidth / n;
+  const sy = img.naturalHeight / n;
+  return { x: left * sx, y: top * sy, width: (right - left + 1) * sx, height: (bottom - top + 1) * sy };
+}
+
+// A team's art cropped to its opaque pixels and fit to a size-px square, so art
+// drawn with wide transparent margins sits as large as the rest. Resolves to a canvas.
+async function trimmedArt(src, size) {
+  const img = await loadImage(src);
+  const box = opaqueBox(img) ?? { x: 0, y: 0, width: img.naturalWidth, height: img.naturalHeight };
+  const px = Math.round(size * devicePixelRatio);
+  const canvas = h('canvas', { width: px, height: px, 'aria-hidden': 'true' });
+  const fit = Math.min(px / box.width, px / box.height);
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, box.x, box.y, box.width, box.height,
+    (px - box.width * fit) / 2, (px - box.height * fit) / 2, box.width * fit, box.height * fit);
+  return canvas;
+}
+
 function saveBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const link = h('a', { href: url, download: filename });
@@ -143,6 +180,7 @@ class App extends EventTarget {
     this.kitFrame = 0;
     this.kitTimer = 0;
     this.textBound = false; // the text field shows the selected text layer
+    this.wallArtLoaded = false;
     this.stageAction = null;
 
     this.canvas = new CanvasManager($('mainCanvas'), $('canvasWrapper'));
@@ -275,15 +313,9 @@ class App extends EventTarget {
   }
 
   buildWall() {
+    this.wallArtLoaded = false;
     const items = this.teams.map((team) => {
-      const art = pickAsset(DEFAULT_ASSET, availability(this.manifest[team.prefix]));
-      const img = h('img', { src: thumbUrl(team.prefix, art), alt: '', width: 72, height: 72, loading: 'lazy', decoding: 'async' });
-      const frame = h('span', { class: 'wall-art' }, img);
-      img.addEventListener('load', () => frame.classList.add('is-loaded'), { once: true });
-      img.addEventListener('error', () => {
-        frame.classList.add('is-loaded');
-        img.hidden = true;
-      }, { once: true });
+      const frame = h('span', { class: 'wall-art', 'data-src': this.teamArt(team.prefix) });
       const button = h('button', {
         type: 'button',
         class: 'wall-item',
@@ -313,10 +345,26 @@ class App extends EventTarget {
     const wall = $('franchiseWall');
     if (wall.open || this.drawing || !this.teams.length) return;
     this.syncWall();
+    this.loadWallArt();
     wall.showModal();
     $('franchiseChip').setAttribute('aria-expanded', 'true');
-    // With no franchise yet the dialog's own focus (Close) stays, so no tile looks picked.
-    $('wallGrid').querySelector('.wall-item[aria-current="true"]')?.focus();
+    $('wallGrid').querySelector('.wall-item[tabindex="0"]')?.focus(); // the current franchise, or the first
+  }
+
+  // The wall's art loads the first time it opens, not on every page load.
+  loadWallArt() {
+    if (this.wallArtLoaded) return;
+    this.wallArtLoaded = true;
+    for (const frame of $('wallGrid').querySelectorAll('.wall-art')) {
+      trimmedArt(frame.dataset.src, 72)
+        .then((canvas) => frame.append(canvas), () => {})
+        .finally(() => frame.classList.add('is-loaded'));
+    }
+  }
+
+  // The thumbnail that stands for a team: its Sticker, else the first asset it has.
+  teamArt(prefix) {
+    return thumbUrl(prefix, pickAsset(DEFAULT_ASSET, availability(this.manifest[prefix])));
   }
 
   // Arrow keys walk the grid by its rendered column count.
@@ -499,7 +547,7 @@ class App extends EventTarget {
     this.drawing = null;
     $('signView').close();
     this.syncDrawingUI();
-    $('drawBtn').focus();
+    $('drawBtn').focus({ preventScroll: true });
   }
 
   // While signing, nothing may resize the stage under the pad: that would stretch the ink.
@@ -587,7 +635,16 @@ class App extends EventTarget {
     this.state.layers.push(layer);
     this.select(layer.id);
     this.render();
+    if (land) this.revealKit();
     if (before) this.landOnKit(layer, before);
+  }
+
+  // In the stacked layout a new signature brings the kit strip into view from its
+  // first tile, so the player sees it land.
+  revealKit() {
+    if (!stacked.matches) return;
+    $('kitSheet').scrollTo({ left: 0 });
+    $('kit').scrollIntoView({ block: 'nearest', behavior: reducedMotion.matches ? 'auto' : 'smooth' });
   }
 
   layerName(layer) {
@@ -951,7 +1008,10 @@ class App extends EventTarget {
       art.replaceChildren(icon('layout-grid'));
       return;
     }
-    art.replaceChildren(h('img', { src: thumbUrl(prefix, pickAsset(DEFAULT_ASSET, this.available)), alt: '', width: 36, height: 36 }));
+    art.replaceChildren();
+    trimmedArt(this.teamArt(prefix), 36).then((canvas) => {
+      if (art.dataset.prefix === prefix) art.replaceChildren(canvas);
+    }, () => {});
   }
 
   syncDownload() {
